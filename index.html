@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One-Step Equations</title>
+<style>
+  :root{
+    --ink:#0f172a; --line:#1e293b; --muted:#64748b; --faint:#94a3b8;
+    --blue:#1d4ed8; --blue-b:#3b82f6; --blue-bg:#eff6ff;
+    --green:#059669; --green-bg:#ecfdf5;
+    --rose:#e11d48; --rose-bg:#fff1f2;
+    --page:#f8fafc; --edge:#e2e8f0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--page); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{height:100%;display:flex;flex-direction:column;overflow:hidden;padding:12px 16px;}
+  .wrap{width:100%;max-width:52rem;margin:0 auto;display:flex;flex-direction:column;height:100%;min-height:0;}
+
+  /* nav tabs */
+  .nav-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid var(--edge);padding-bottom:2px;}
+  .tab-btn{
+    background:none; border:none; padding:8px 14px; font-size:.9rem; font-weight:600;
+    color:var(--muted); cursor:pointer; border-radius:6px 6px 0 0; transition:all .15s ease;
+  }
+  .tab-btn:hover{color:var(--ink); background:var(--edge);}
+  .tab-btn.active{color:var(--blue); border-bottom:3px solid var(--blue); background:#fff;}
+
+  /* header */
+  .top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;flex-shrink:0;}
+  h1{font-size:1.05rem;font-weight:600;text-transform:uppercase;letter-spacing:.18em;margin:0;}
+  .levels{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .score{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .score b{color:var(--green);}
+  /* how many of each kind have been solved; the current kind is highlighted */
+  .tally{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font-size:.72rem;
+         color:var(--faint);font-variant-numeric:tabular-nums;}
+  .tally span{white-space:nowrap;}
+  .tally b{color:var(--muted);font-weight:600;}
+  .tally .on,.tally .on b{color:var(--blue);}
+
+  /* work area */
+  .work{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:8px 0;}
+  .scroller{width:100%;overflow-x:auto;}
+  .eq{display:grid;column-gap:30px;row-gap:10px;width:max-content;margin:0 auto;
+      font-family:Georgia,"Times New Roman",serif;font-size:1.85rem;}
+  /* add & subtract lines up four columns: term, term, =, number */
+  .eq.k-addsub{grid-template-columns:auto auto auto auto;row-gap:12px;}
+  .eq.k-muldiv,.eq.k-frac{grid-template-columns:auto auto auto;}
+  .cell{min-height:3.6rem;padding:2px 0;display:flex;align-items:center;justify-content:center;gap:6px;
+        transition:opacity .7s ease-out;}
+  .eq.k-addsub .cell{gap:10px;}
+  .rule{grid-column:1 / -1;height:2px;margin:5px 0;border-top:2px solid var(--line);}
+  /* same row break as .rule, but with no line drawn: nothing is being summed */
+  .spacer{grid-column:1 / -1;height:0;margin:9px 0;}
+  .hide{visibility:hidden;}
+  .eqsign{color:var(--faint);}
+  .blue{color:var(--blue);}
+  .green{color:var(--green);}
+  .grey{color:var(--muted);}
+  .faint{color:var(--faint);}
+  .cancelling{text-decoration:line-through;text-decoration-thickness:2px;opacity:.6;}
+  .struck{text-decoration:line-through;text-decoration-thickness:2px;opacity:.25;}
+
+  /* small inline fractions, used while adding and subtracting */
+  .stack{display:inline-flex;flex-direction:column;align-items:center;margin:0 3px;
+         font-size:.66em;line-height:1.18;vertical-align:-.44em;}
+  .stack .t,.stack .b{padding:0 5px;}
+  .stack .bar{width:100%;border-top:2px solid currentColor;margin:.14em 0;}
+  .num{display:inline-flex;align-items:center;vertical-align:middle;}
+  .num .whole{margin-left:2px;}
+  /* a mixed number: whole part beside a smaller stacked fraction */
+  .mixnum{display:inline-flex;align-items:center;vertical-align:middle;}
+  .mixnum .whole{line-height:1;}
+  .mixnum .dfrac{font-size:.6em;margin-left:4px;}
+  .sgn{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;}
+
+  /* full-size fractions, used when multiplying and dividing */
+  .dfrac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;
+         line-height:1.15;margin:0 1px;font-size:.86em;}
+  .dfrac > .t,.dfrac > .b{padding:0 7px;display:flex;align-items:center;justify-content:center;}
+  .dfrac > .bar{width:100%;min-width:1.4rem;border-top:2px solid currentColor;margin:4px 0;}
+  /* dividing both sides draws a bar wide enough to sit over an input box */
+  .eq.k-muldiv .dfrac{font-size:1em;}
+  .eq.k-muldiv .dfrac > .t,.eq.k-muldiv .dfrac > .b{padding:0 8px;}
+  .eq.k-muldiv .dfrac > .bar{min-width:3.6rem;border-top-color:var(--line);}
+  .dfrac.grow{animation:grow .35s ease-out;}
+
+  /* the reciprocal the student writes: two boxes stacked over a bar */
+  .fracbox{display:inline-flex;flex-direction:column;align-items:center;gap:4px;vertical-align:middle;}
+  .fracbox > .bar{width:112%;border-top:2px solid var(--line);}
+
+  /* diagonal cancel stroke, drawn corner to corner so it fits whatever it crosses */
+  .slash{position:relative;display:inline-flex;align-items:center;justify-content:center;
+         padding:0 .18em;background-repeat:no-repeat;background-position:center;background-size:100% 100%;
+         background-image:linear-gradient(to bottom right,
+           transparent calc(50% - 1.8px), var(--sl) calc(50% - 1.8px),
+           var(--sl) calc(50% + 1.8px), transparent calc(50% + 1.8px));}
+  .slash.draw{--sl:#475569;color:#94a3b8;animation:draw .5s ease-out both;}
+  .slash.dim{--sl:#a3aec0;color:#cbd5e1;}
+  .slash.cross{--sl:#64748b;color:#9aa7bb;}
+  /* a number waiting to be simplified: same box as .slash, but no stroke yet */
+  .pend{display:inline-flex;align-items:center;justify-content:center;padding:0 .18em;}
+
+  /* cross-simplifying: the reduced number is written above or below the crossed-out one
+     without shifting it, so the originals keep their place on the line */
+  .cx{position:relative;display:inline-flex;align-items:center;justify-content:center;}
+  .cx .redu{position:absolute;left:50%;transform:translateX(-50%);
+            display:flex;align-items:center;justify-content:center;
+            color:var(--blue);font-size:.66em;line-height:1;}
+  .cx.above .redu{bottom:100%;margin-bottom:3px;}
+  .cx.below .redu{top:100%;margin-top:3px;}
+
+  /* parenthesised group: multiplying both sides */
+  .mgroup{display:inline-flex;align-items:center;gap:9px;}
+  .mgroup.roomy{padding:1.9rem 0;}
+  .paren{font-size:1.35em;line-height:1;color:var(--line);}
+  .mgroup.tall .paren{font-size:2.6em;font-weight:300;}
+  .mgroup.fade{animation:grow .35s ease-out;}
+  .eq.k-muldiv .mgroup{gap:5px;}
+  .eq.k-muldiv .mgroup.tall .paren{font-size:2.4em;}
+  @keyframes grow{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  @keyframes draw{from{background-size:0% 100%;}to{background-size:100% 100%;}}
+
+  /* inputs */
+  .box{height:2.5rem;width:3.5rem;border:2px solid var(--blue-b);background:var(--blue-bg);color:var(--blue);
+       border-radius:6px;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;
+       outline:none;transition:border-color .15s,background .15s;}
+  .box.wide{width:5rem;}
+  .box.small{font-size:1.25rem;}
+  .box.mini{height:2.15rem;width:3.2rem;font-size:1.25rem;}
+  .box.tiny{height:1.8rem;width:2.4rem;font-size:1.05rem;border-radius:5px;}
+  .box:focus{border-color:var(--blue);background:#fff;}
+  .box.bad{border-color:#fb7185;background:var(--rose-bg);color:var(--rose);}
+  .box.ok{border-color:#10b981;background:var(--green-bg);color:var(--green);}
+  .preview{color:var(--faint);}
+
+  /* fraction-shaped input: box above the denominator */
+  .fracin{display:inline-flex;flex-direction:column;align-items:center;gap:4px;}
+  .fracin .bar2{width:4rem;border-top:2px solid var(--line);}
+  .fracin .den{color:#475569;line-height:1;font-family:Georgia,serif;}
+
+  /* operation buttons */
+  .ops{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;}
+  .op{width:5.2rem;height:4.2rem;border:2px solid var(--edge);background:#fff;color:var(--line);
+      border-radius:12px;cursor:pointer;font-family:Georgia,"Times New Roman",serif;font-size:2.1rem;
+      line-height:1;display:flex;align-items:center;justify-content:center;
+      transition:border-color .15s,background .15s,transform .1s;}
+  .op:hover{border-color:var(--blue-b);background:var(--blue-bg);color:var(--blue);}
+  .op:active{transform:translateY(1px);}
+  .op:focus-visible{outline:3px solid var(--blue-b);outline-offset:2px;}
+  .op.shake{animation:shake .32s;border-color:#fb7185;background:var(--rose-bg);color:var(--rose);}
+  @keyframes shake{0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+
+  .panel{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;
+         font-family:Georgia,serif;font-size:1.35rem;}
+  .panel .lbl{font-size:.85rem;color:var(--muted);
+              font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .checkline{width:100%;text-align:center;font-family:Georgia,serif;font-size:1.42rem;line-height:2.1;}
+  .checkline .orig{color:var(--faint);}
+  .checkline .sub{margin-top:12px;}
+
+  /* prompt bar */
+  .promptbar{flex-shrink:0;border-top:1px solid var(--edge);padding-top:12px;padding-bottom:4px;min-height:4.6rem;}
+  .prompt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:#334155;font-size:.98rem;}
+  .prompt .math{font-family:Georgia,serif;}
+  .prompt strong{font-weight:600;}
+  .link{background:none;border:none;padding:0;color:var(--muted);font-size:.85rem;font-family:inherit;
+        text-decoration:underline;text-underline-offset:4px;cursor:pointer;}
+  .link:hover{color:var(--ink);}
+  .hintline{width:100%;font-size:.85rem;color:#475569;display:flex;flex-wrap:wrap;align-items:center;gap:5px;}
+  .missline{margin-top:4px;font-size:.85rem;color:var(--rose);}
+  .noteline{margin-top:4px;font-size:.85rem;color:var(--muted);}
+  .next{background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 20px;
+        font-size:.95rem;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .next:hover{background:#1e293b;}
+  .skip{margin-top:4px;font-size:.72rem;color:var(--faint);}
+  .row-between{display:flex;align-items:center;justify-content:between;gap:12px;width:100%;}
+
+  @media (max-width:640px){
+    .nav-tabs{overflow-x:auto;}
+    .tab-btn{padding:6px 10px;font-size:.8rem;white-space:nowrap;}
+    .eq{font-size:1.45rem;column-gap:15px;}
+    .eq.k-addsub{column-gap:16px;row-gap:8px;}
+    .cell{min-height:3.1rem;}
+    h1{font-size:.9rem;}
+    .checkline{font-size:1.15rem;line-height:1.9;}
+    .ops{gap:9px;}
+    .op{width:4rem;height:3.4rem;font-size:1.7rem;}
+    .box{height:2.3rem;width:3.1rem;font-size:1.3rem;}
+    .box.wide{width:4.4rem;}
+    .box.mini{height:2rem;width:2.8rem;font-size:1.15rem;}
+    .box.tiny{height:1.6rem;width:2.1rem;font-size:.95rem;}
+    .mgroup.roomy{padding:1.5rem 0;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .dfrac.grow,.mgroup.fade,.op.shake,.slash.draw{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="wrap">
+    <div class="nav-tabs" id="navTabs">
+      <button class="tab-btn active" data-mode="addsub">Add &amp; Subtract</button>
+      <button class="tab-btn" data-mode="muldiv">Multiply &amp; Divide</button>
+      <button class="tab-btn" data-mode="frac">Fraction Coefficients</button>
+      <button class="tab-btn" data-mode="mixed">Mixed</button>
+    </div>
+
+    <div class="top">
+      <h1>One-step equations</h1>
+      <div class="levels" id="levels"></div>
+    </div>
+
+    <div class="work">
+      <div class="scroller"><div class="eq" id="eq"></div></div>
+      <div id="panel"></div>
+    </div>
+
+    <div class="promptbar" id="promptbar"></div>
+  </div>
+</div>
+
+<script>
+
+/* ============ shell: one score, tabs state, router ============ */
+const Shell = {
+  done:0, streak:0, active:null, mode:"addsub", engines:{}, timers:[], recent:[],
+  counts:{addsub:0, muldiv:0, frac:0},
+
+  later:function(ms,fn){ Shell.timers.push(setTimeout(fn,ms)); },
+  clearTimers:function(){ Shell.timers.forEach(clearTimeout); Shell.timers=[]; },
+
+  /* every drill paints the same header and tags the grid so its own layout applies */
+  head:function(key){
+    document.getElementById("eq").className = "eq k-"+key;
+    const c=Shell.counts;
+    const tab=function(k,label,title){
+      return '<span class="'+(key===k?"on":"")+'" title="'+title+'">'+label
+           + ' <b>'+c[k]+'</b></span>';
+    };
+    document.getElementById("levels").innerHTML =
+      '<span class="score">'+Shell.done+' solved &middot; <b>'+Shell.streak+'</b> in a row</span>'
+      + '<span class="tally">'
+      + tab("addsub","+ &minus;","Add &amp; subtract")
+      + tab("muldiv","&times; &divide;","Multiply &amp; divide")
+      + tab("frac","a/b","Fraction coefficients")
+      + '</span>';
+  },
+  solved:function(clean){
+    Shell.done++;
+    Shell.streak = clean ? Shell.streak+1 : 0;
+    if(Shell.active && Shell.counts[Shell.active]!==undefined) Shell.counts[Shell.active]++;
+  },
+
+  /* the same four moves on every problem: press one, then type the number */
+  OPS:[
+    ["opPlus", "add",      "+",         "Add to both sides"],
+    ["opMinus","sub",      "\u2212",    "Subtract from both sides"],
+    ["opMul",  "multiply", "(\u2009)",  "Multiply both sides"],
+    ["opDiv",  "divide",   "\u00f7",    "Divide both sides"]
+  ],
+  opsHTML:function(){
+    return '<div class="ops">'+Shell.OPS.map(function(o){
+      return '<button class="op" id="'+o[0]+'" aria-label="'+o[3]+'" title="'+o[3]+'">'+o[2]+'</button>';
+    }).join("")+'</div>';
+  },
+  bindOps:function(fn){
+    Shell.OPS.forEach(function(o){
+      const b=document.getElementById(o[0]);
+      if(b) b.onclick=function(){ fn(o[1],b); };
+    });
+  },
+  shake:function(btn){
+    if(!btn) return;
+    btn.classList.add("shake");
+    Shell.later(340,function(){ btn.classList.remove("shake"); });
+  },
+
+  /* don't let one kind of problem come up three times running in mixed mode */
+  pickKind:function(){
+    if(Shell.mode !== "mixed") return Shell.mode;
+    let pool=["addsub","muldiv","frac"];
+    if(Shell.recent.length>1 && Shell.recent[0]===Shell.recent[1]){
+      pool=pool.filter(function(k){return k!==Shell.recent[0];});
+    }
+    const k=pool[Math.floor(Math.random()*pool.length)];
+    Shell.recent.unshift(k); Shell.recent=Shell.recent.slice(0,2);
+    return k;
+  },
+  /* add & subtract keeps its three flavours; whole numbers come up most often */
+  pickLevel:function(){
+    const r=Math.random();
+    return r<0.6 ? 0 : (r<0.8 ? 1 : 2);
+  },
+
+  next:function(){
+    Shell.clearTimers();
+    document.getElementById("panel").innerHTML="";
+    const k=Shell.pickKind();
+    Shell.active=k;
+    Shell.engines[k].start(k==="addsub" ? Shell.pickLevel() : undefined);
+  },
+
+  setTab:function(mode){
+    if(Shell.mode === mode) return;
+    Shell.mode = mode;
+    document.querySelectorAll(".tab-btn").forEach(function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
+    });
+    Shell.next();
+  }
+};
+
+/* Attach tab listeners */
+document.querySelectorAll(".tab-btn").forEach(function(btn){
+  btn.onclick = function(){ Shell.setTab(btn.getAttribute("data-mode")); };
+});
+
+/* ================= addsub ================= */
+Shell.engines["addsub"] = (function(){
+const KEY="addsub";
+
+/* ============ rational arithmetic ============ */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}return a||1;}
+function lcm(a,b){return Math.abs(a*b)/gcd(a,b);}
+function R(n,d){if(d===undefined)d=1;if(d<0){n=-n;d=-d;}const g=gcd(n,d);return {n:n/g,d:d/g};}
+function add(x,y){return R(x.n*y.d+y.n*x.d, x.d*y.d);}
+function neg(x){return {n:-x.n,d:x.d};}
+function absR(x){return {n:Math.abs(x.n),d:x.d};}
+function same(x,y){return x.n*y.d===y.n*x.d;}
+function numOf(x){return x.n/x.d;}
+
+/* ============ formatting ============ */
+const MINUS="\u2212";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function dash(s){return String(s).replace(/-/g,MINUS);}
+function decText(r){
+  let s=numOf(r).toFixed(4).replace(/0+$/,"").replace(/\.$/,"");
+  return s==="-0"?"0":s;
+}
+function stackHTML(t,b){return '<span class="stack"><span class="t">'+t+'</span><span class="bar"></span><span class="b">'+b+'</span></span>';}
+/* a number: decimals plain, fractions stacked */
+function valHTML(r,mode){
+  if(mode==="dec") return dash(decText(r));
+  if(r.d===1) return dash(String(r.n));
+  const whole=Math.trunc(Math.abs(r.n)/r.d), rest=Math.abs(r.n)%r.d;
+  return '<span class="num">'+(r.n<0?MINUS:"")+(whole?'<span class="whole">'+whole+'</span>':"")+stackHTML(rest,r.d)+'</span>';
+}
+function signedHTML(r,mode){
+  return '<span class="sgn">'+(r.n<0?MINUS:"+")+valHTML(absR(r),mode)+'</span>';
+}
+function overHTML(n,d){                       /* exactly as written, never reduced */
+  return '<span class="num">'+(n<0?MINUS:"")+stackHTML(Math.abs(n),d)+'</span>';
+}
+function overSignedHTML(n,d){
+  return '<span class="sgn">'+(n<0?MINUS:"+")+stackHTML(Math.abs(n),d)+'</span>';
+}
+
+/* ============ parsing ============ */
+function parseParts(raw){
+  if(raw===null||raw===undefined) return null;
+  let s=String(raw).trim().toLowerCase().replace(/[\u2212\u2013\u2014]/g,"-");
+  s=s.replace(/^add\b/,"+").replace(/^plus\b/,"+").replace(/^(subtract|minus|take away)\b/,"-");
+  s=s.replace(/\s+/g," ").trim().replace(/^([+-])\s+/,"$1");
+  let m;
+  if((m=s.match(/^([+-]?)(\d+) (\d+)\/(\d+)$/))){
+    const sg=m[1]==="-"?-1:1,w=+m[2],n=+m[3],d=+m[4];
+    return d?{n:sg*(w*d+n),d:d}:null;
+  }
+  if((m=s.match(/^([+-]?)(\d+)\/(\d+)$/))){
+    const sg=m[1]==="-"?-1:1,n=+m[2],d=+m[3];
+    return d?{n:sg*n,d:d}:null;
+  }
+  if((m=s.match(/^([+-]?)(\d+(?:\.\d+)?|\.\d+)$/))){
+    const sg=m[1]==="-"?-1:1,v=m[2];
+    if(v.indexOf(".")>=0){
+      const parts=v.split("."), d=Math.pow(10,parts[1].length);
+      return {n:sg*((+parts[0]||0)*d + +parts[1]), d:d};
+    }
+    return {n:sg*(+v),d:1};
+  }
+  return null;
+}
+function parseRat(s){const p=parseParts(s);return p?R(p.n,p.d):null;}
+function parseWhole(s){const p=parseParts(s);return (p&&p.d===1)?p.n:null;}
+
+/* ============ problem generation ============ */
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+const VARS=["x","y","n","m","k","t","w","p","h","r","b","c"];
+
+function genInt(){let n=0;while(n===0)n=rint(-16,16);return R(n);}
+function genDec(){
+  const d=pick([10,10,10,100]);
+  const lo=d===10?5:25, hi=d===10?180:900;
+  let n=rint(lo,hi);
+  if(n%d===0)n+=1;
+  return R((Math.random()<0.5?-1:1)*n,d);
+}
+function genFrac(){                            /* proper fractions only */
+  const d=pick([2,3,4,5,6,8]);
+  return R((Math.random()<0.5?-1:1)*rint(1,d-1),d);
+}
+function genProblem(level){
+  const g = level===0?genInt : level===1?genDec : genFrac;
+  const negVar = Math.random()<0.3;            /* sometimes the variable term is negative: −b */
+  let a=g(), sol=g();
+  if(level===0){while(Math.abs(numOf(sol))>22) sol=g();}
+  const term=function(){return negVar?neg(sol):sol;};
+  if(level===2){
+    for(let i=0;i<300;i++){
+      const t=add(a,term());
+      if(t.n!==0 && Math.abs(numOf(t))<1) break;
+      a=g(); sol=g();
+    }
+  }
+  return {
+    a:a, sol:sol, negVar:negVar,
+    T:term(),                                  /* what the variable term is worth */
+    C:add(a,term()),                           /* the lone constant */
+    varLeft:Math.random()<0.5,
+    varFirst:Math.random()<0.5,
+    V:pick(VARS)
+  };
+}
+
+/* ============ state ============ */
+const S={
+  level:0, p:genProblem(0), phase:"pick", sign:1,
+  opIn:"", lcdIn:"", e1:"", e2:"", valIn:"", simpIn:"", flipIn:"",
+  rawShown:null, miss:"", hint:false, done:0, streak:0, clean:true,
+  firstId:null
+};
+const clearTimers=Shell.clearTimers, later=Shell.later;
+
+/* derived */
+function mode(){return S.level===1?"dec":"frac";}
+function isFrac(){return S.level===2;}
+function wideCls(){return S.level!==0?" wide":"";}
+function op(){return neg(S.p.a);}
+function needConvert(){return isFrac() && S.p.C.d!==op().d;}
+function commonD(){
+  const chosen=parseWhole(S.lcdIn);
+  const good = chosen && chosen>0 && chosen%S.p.C.d===0 && chosen%op().d===0;
+  if(!isFrac()) return 1;
+  if(!needConvert()) return S.p.C.d;
+  return good?chosen:lcm(S.p.C.d,op().d);
+}
+function rn1(){return isFrac()? S.p.C.n*(commonD()/S.p.C.d) : 0;}
+function rn2(){return isFrac()? op().n*(commonD()/op().d) : 0;}
+function sumN(){return rn1()+rn2();}
+function e1ok(){const v=parseWhole(S.e1);return v!==null && Math.abs(v)===Math.abs(rn1());}
+function e2ok(){const v=parseWhole(S.e2);return v!==null && Math.abs(v)===Math.abs(rn2());}
+function afterCancel(){return ["lcd","equiv","compute","simplify","flip","solved","check"].indexOf(S.phase)>=0;}
+function rewritten(){return isFrac() && needConvert() && ["compute","simplify","flip","solved","check"].indexOf(S.phase)>=0;}
+function varTermText(){
+  const V=S.p.V;
+  if(S.p.varFirst) return S.p.negVar? MINUS+V : V;
+  return S.p.negVar? MINUS+" "+V : "+ "+V;
+}
+
+/* ============ rendering ============ */
+function boxHTML(id,val,extra){
+  return '<input id="'+id+'" class="box'+wideCls()+(extra||"")+'" value="'+esc(val)+'" autocomplete="off" spellcheck="false" inputmode="text">';
+}
+function previewHTML(id){ return '<span class="preview" id="'+id+'-pv"></span>'; }
+function cell(html,cls){ return '<div class="cell '+(cls||"")+'">'+html+'</div>'; }
+
+function signGlyph(){ return S.sign<0 ? MINUS : "+"; }
+function opBoxHTML(id){
+  return '<span class="sgn">'+signGlyph()+'</span>'
+       + boxHTML(id,S.opIn,"")+(isFrac()?previewHTML(id):"");
+}
+function wantSign(){ return op().n<0 ? "sub" : "add"; }
+
+function renderEquation(){
+  const p=S.p, m=mode(), V=p.V;
+  const cancelling = S.phase==="cancel";
+  const strikeCls = cancelling ? "cancelling" : (afterCancel() ? "struck" : "");
+  const blueCls = ["compute","lcd","equiv"].indexOf(S.phase)>=0 ? "blue" : "";
+  const aHTML = p.varFirst ? signedHTML(p.a,m) : valHTML(p.a,m);
+  const cHTML = rewritten() ? overHTML(rn1(),commonD()) : valHTML(p.C,m);
+  const opHTML = signedHTML(op(),m);
+  const opShownHTML = rewritten() ? overSignedHTML(rn2(),commonD()) : opHTML;
+
+  /* row 1 */
+  const r1={
+    t1: cell(p.varFirst?varTermText():aHTML, p.varFirst?"":strikeCls),
+    t2: cell(p.varFirst?aHTML:varTermText(), p.varFirst?strikeCls:""),
+    eq: cell("=","eqsign"),
+    bn: cell(cHTML, blueCls)
+  };
+  /* row 2 — the same move on both sides */
+  const opLeftId  = "opA", opRightId = "opB";
+  const opCellHTML = S.phase==="op" ? opBoxHTML(p.varLeft?opLeftId:opRightId) : opHTML;
+  const bnCellHTML = S.phase==="op" ? opBoxHTML(p.varLeft?opRightId:opLeftId) : opShownHTML;
+  const r2={
+    t1: p.varFirst ? cell(V,"hide") : cell(opCellHTML, strikeCls+" blue"),
+    t2: p.varFirst ? cell(opCellHTML, strikeCls+" blue") : cell(varTermText(),"hide"),
+    eq: cell("",""),
+    bn: cell(bnCellHTML,"blue")
+  };
+  /* row 4 — the answer */
+  const leftVar = p.negVar ? MINUS+V : V;
+  let ansHTML;
+  if(S.phase==="compute"){
+    ansHTML = boxHTML("ans",S.valIn,"")+(isFrac()?previewHTML("ans"):"");
+  } else if(S.phase==="simplify"){
+    const raw = S.rawShown ? overHTML(S.rawShown.n,S.rawShown.d) : overHTML(sumN(),commonD());
+    ansHTML = '<span class="faint">'+raw+'</span><span class="faint">&rarr;</span>'
+            + boxHTML("simp",S.simpIn,"")+(isFrac()?previewHTML("simp"):"");
+  } else if(S.phase==="lcd"||S.phase==="equiv"){
+    ansHTML = '<span class="faint">?</span>';
+  } else {
+    ansHTML = '<span class="'+(p.negVar?"grey":"green")+'">'+valHTML(p.T,m)+'</span>';
+  }
+  const r4={
+    t1: cell(leftVar, p.varFirst?"":"hide"),
+    t2: cell(leftVar, p.varFirst?"hide":""),
+    eq: cell("=","eqsign"),
+    bn: cell(ansHTML,"")
+  };
+  /* row 5 — flipping the sign on a negative variable */
+  let flipHTML;
+  if(S.phase==="flip"){
+    flipHTML = boxHTML("flip",S.flipIn,"")+(isFrac()?previewHTML("flip"):"");
+  } else {
+    flipHTML = '<span class="green">'+valHTML(p.sol,m)+'</span>';
+  }
+  const r5={
+    t1: cell(V, p.varFirst?"":"hide"),
+    t2: cell(V, p.varFirst?"hide":""),
+    eq: cell("=","eqsign"),
+    bn: cell(flipHTML,"")
+  };
+
+  const order=function(r){return p.varLeft?[r.t1,r.t2,r.eq,r.bn]:[r.bn,r.eq,r.t1,r.t2];};
+  let html = order(r1).join("");
+  if(S.phase!=="pick") html += order(r2).join("");
+  if(S.phase!=="op" && S.phase!=="pick") html += '<div class="rule"></div>';
+  if(afterCancel()) html += order(r4).join("");
+  if(p.negVar && ["flip","solved","check"].indexOf(S.phase)>=0) html += order(r5).join("");
+  document.getElementById("eq").innerHTML=html;
+
+  if(S.phase==="op") S.firstId = opLeftId;
+}
+
+function renderPanel(){
+  const el=document.getElementById("panel");
+  const p=S.p, m=mode(), cd=commonD();
+  if(S.phase==="pick"){
+    el.innerHTML=Shell.opsHTML();
+  } else if(S.phase==="lcd"){
+    el.innerHTML='<div class="panel"><span class="blue">'+valHTML(p.C,m)+' '+signedHTML(op(),m)+'</span>'
+      +'<span class="lbl">same bottom number:</span>'+boxHTML("lcd",S.lcdIn," small")+'</div>';
+    S.firstId="lcd";
+  } else if(S.phase==="equiv"){
+    const sign1 = rn1()<0 ? '<span>'+MINUS+'</span>' : '';
+    const sign2 = rn2()<0 ? MINUS : "+";
+    el.innerHTML='<div class="panel"><span class="blue">'+valHTML(p.C,m)+' '+signedHTML(op(),m)+'</span>'
+      +'<span class="eqsign">=</span>'+sign1
+      +'<span class="fracin">'+boxHTML("e1",S.e1," small"+(e1ok()?" ok":""))+'<span class="bar2"></span><span class="den">'+cd+'</span></span>'
+      +'<span>'+sign2+'</span>'
+      +'<span class="fracin">'+boxHTML("e2",S.e2," small"+(e2ok()?" ok":""))+'<span class="bar2"></span><span class="den">'+cd+'</span></span>'
+      +'</div>';
+    S.firstId = e1ok() ? "e2" : "e1";
+  } else if(S.phase==="check"){
+    const aHTML = p.varFirst ? signedHTML(p.a,m) : valHTML(p.a,m);
+    const solG = '<span class="green">'+valHTML(p.sol,m)+'</span>';
+    let subVar;
+    if(p.negVar) subVar = (p.varFirst?MINUS:MINUS+" ")+"("+solG+")";
+    else if(p.varFirst) subVar = solG;
+    else subVar = "+ " + (p.sol.n<0 ? "("+solG+")" : solG);
+    const orig = p.varFirst ? varTermText()+" "+aHTML : aHTML+" "+varTermText();
+    const subbed = p.varFirst ? subVar+" "+aHTML : aHTML+" "+subVar;
+    const cHTML = valHTML(p.C,m);
+    const origLine = p.varLeft ? orig+' <span class="eqsign">=</span> '+cHTML : cHTML+' <span class="eqsign">=</span> '+orig;
+    const subLine  = p.varLeft
+      ? subbed+' <span class="eqsign">=</span> '+cHTML+' <span class="green">&#10003;</span>'
+      : cHTML+' <span class="eqsign">=</span> '+subbed+' <span class="green">&#10003;</span>';
+    el.innerHTML='<div class="checkline"><div class="orig">'+origLine+'</div><div class="sub">'+subLine+'</div></div>';
+  } else {
+    el.innerHTML="";
+  }
+}
+
+function renderPrompt(){
+  const el=document.getElementById("promptbar");
+  const p=S.p, m=mode(), V=p.V, cd=commonD();
+  const negV = MINUS+V;
+  const hintBtn='<button class="link" id="hintBtn">'+(S.hint?"Hide hint":"Hint")+'</button>';
+  let h="";
+
+  if(S.phase==="pick"){
+    h='<div class="prompt"><span>What do you do to <strong>both sides</strong> to get '+(p.negVar?negV:V)+' by itself?</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span class="math">'+valHTML(p.a,m)+'</span>'
+      +'<span>is in the way, and it is being '+(p.a.n<0?"subtracted":"added")+'. '
+      +'Do the opposite &mdash; press '+(op().n<0?MINUS:"+")+'.</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="op"){
+    h='<div class="prompt"><span>Now type how much you '+(op().n<0?"subtract from":"add to")+' both sides.'
+      +(isFrac()?' <span class="faint">Type fractions like 3/4.</span>':'')+'</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>Use</span><span class="math">'+valHTML(absR(op()),m)+'</span>'
+      +'<span>&mdash; that is exactly what cancels</span><span class="math">'+valHTML(p.a,m)+'</span><span>out.</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="cancel"){
+    h='<div class="prompt"><span class="math">'+valHTML(p.a,m)+'</span><span>and</span>'
+      +'<span class="math">'+signedHTML(op(),m)+'</span>'
+      +'<span>make zero, so they cancel &mdash; leaving '+(p.negVar?negV:V)+' alone.</span></div>';
+  }
+  else if(S.phase==="lcd"){
+    h='<div class="prompt"><span>The bottom numbers don\'t match, so these can\'t be added yet. '
+      +'What number do '+p.C.d+' and '+op().d+' both divide into?</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">Count by '+p.C.d+'s until you land on a multiple of '+op().d
+      +'. The smallest is '+lcm(p.C.d,op().d)+'.</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="equiv"){
+    h='<div class="prompt"><span>Rewrite both fractions over '+cd+'. '
+      +'<span class="faint">The signs are already written &mdash; just fill in the top numbers.</span></span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">'+p.C.d+' &times; '+(cd/p.C.d)+' = '+cd
+      +', so multiply that top number by '+(cd/p.C.d)+'. Multiply the other top by '+(cd/op().d)+'.</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="compute"){
+    const cHTML = rewritten()? overHTML(rn1(),cd) : valHTML(p.C,m);
+    const oHTML = rewritten()? overSignedHTML(rn2(),cd) : signedHTML(op(),m);
+    h='<div class="prompt"><span>Add up the blue side:</span>'
+      +'<span class="math blue">'+cHTML+' '+oHTML+'</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">'+(isFrac()
+      ? 'Add the top numbers and keep '+cd+' on the bottom. Simplify now or on the next step &mdash; either is fine.'
+      : 'Adding moves up the number order, subtracting moves down.')+'</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="simplify"){
+    const raw = S.rawShown ? overHTML(S.rawShown.n,S.rawShown.d) : overHTML(sumN(),cd);
+    const g = gcd(Math.abs(S.rawShown?S.rawShown.n:sumN()), S.rawShown?S.rawShown.d:cd);
+    h='<div class="prompt"><span class="math">'+raw+'</span>'
+      +'<span>isn\'t in lowest terms yet. Write the simplest form.</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">Divide the top and the bottom by '+(g>1?g:"their common factor")+'.</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="flip"){
+    h='<div class="prompt"><span>That\'s <span class="math">'+negV+'</span>, not '+V
+      +'. Multiply both sides by '+MINUS+'1 to flip the signs.</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>The opposite of</span><span class="math">'+valHTML(p.T,m)
+      +'</span><span>is</span><span class="math">'+valHTML(p.sol,m)+'</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="solved"){
+    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
+  }
+  else if(S.phase==="check"){
+    h='<div class="row-between"><div class="prompt"><span>Put</span><span class="math">'+valHTML(p.sol,m)
+      +'</span><span>back in for '+V+' and both sides match.</span></div>'
+      +'<button class="next" id="nextBtn">Next problem &rarr;</button></div>';
+  }
+  if(S.miss) h+='<div class="missline">'+S.miss+'</div>';
+  if(S.phase!=="check") h+='<div><button class="link skip" id="skipBtn">Skip</button></div>';
+  el.innerHTML=h;
+}
+
+function updatePreview(id){
+  const pv=document.getElementById(id+"-pv");
+  if(!pv) return;
+  const box=document.getElementById(id);
+  const parts=parseParts(box?box.value:"");
+  pv.innerHTML = (parts && parts.d!==1) ? overHTML(parts.n,parts.d) : "";
+}
+
+function render(){
+  Shell.head(KEY);
+  renderEquation();
+  renderPanel();
+  renderPrompt();
+  attach();
+  ["opA","opB","ans","simp","flip"].forEach(updatePreview);
+  focusFirst();
+}
+function focusFirst(){
+  later(60,function(){
+    const el = S.firstId && document.getElementById(S.firstId);
+    if(el && !el.readOnly) el.focus();
+  });
+}
+
+/* ============ flow ============ */
+function setPhase(ph){
+  clearTimers();
+  S.phase=ph; S.miss="";
+  if(ph==="compute") S.firstId="ans";
+  else if(ph==="simplify") S.firstId="simp";
+  else if(ph==="flip") S.firstId="flip";
+  else if(ph==="pick") S.firstId=null;
+  render();
+  if(ph==="cancel") later(1600,function(){ setPhase(needConvert()?"lcd":"compute"); });
+  if(ph==="solved") later(850,function(){ setPhase("check"); });
+}
+function finish(){
+  Shell.solved(S.clean);
+  setPhase("solved");
+}
+function flagMiss(msg){
+  S.clean=false; S.miss=msg; renderPrompt(); attach();
+  later(2600,function(){ S.miss=""; renderPrompt(); attach(); });
+}
+function missMessage(){
+  if(S.phase==="op") return "That won't cancel it out \u2014 use the same size number that's in the way.";
+  if(S.phase==="lcd") return S.p.C.d+" and "+op().d+" both have to divide into it evenly.";
+  if(S.phase==="equiv") return "Multiply the top by the same number you multiplied the bottom by.";
+  if(S.phase==="compute") return "Not quite \u2014 check the sign, then try again.";
+  if(S.phase==="simplify") return "Divide the top and the bottom by the same number.";
+  if(S.phase==="flip") return "Flip the sign on both sides.";
+  return "";
+}
+function nextProblem(){ Shell.next(); }
+function begin(level){
+  clearTimers();
+  S.level=level !== undefined ? level : 0;
+  S.p=genProblem(S.level); S.phase="pick"; S.sign=1;
+  S.opIn=""; S.lcdIn=""; S.e1=""; S.e2=""; S.valIn=""; S.simpIn=""; S.flipIn="";
+  S.rawShown=null; S.hint=false; S.clean=true; S.miss=""; S.firstId=null;
+  render();
+}
+
+/* ============ input handling ============ */
+function attach(){
+  const hb=document.getElementById("hintBtn");
+  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); };
+  const sb=document.getElementById("skipBtn");
+  if(sb) sb.onclick=nextProblem;
+  const nb=document.getElementById("nextBtn");
+  if(nb) nb.onclick=nextProblem;
+  Shell.bindOps(chooseOp);
+
+  bind("opA",onOp); bind("opB",onOp);
+  bind("lcd",onLcd);
+  bind("e1",onEquiv); bind("e2",onEquiv);
+  bind("ans",onCompute);
+  bind("simp",onSimplify);
+  bind("flip",onFlip);
+}
+function bind(id,handler){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.oninput=handler;
+  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); flagMiss(missMessage()); } };
+}
+
+function chooseOp(kind,btn){
+  if(kind===wantSign()){
+    S.sign = kind==="sub" ? -1 : 1;
+    S.opIn=""; S.hint=false; setPhase("op");
+    return;
+  }
+  S.clean=false;
+  Shell.shake(btn);
+  if(kind==="add"||kind==="sub"){
+    flagMiss("That moves the wrong way \u2014 it makes that side bigger instead of clearing "
+      +(S.p.a.n<0?"the subtraction":"the addition")+".");
+  } else {
+    flagMiss("Nothing is multiplying or dividing "+S.p.V
+      +" here \u2014 a number is being "+(S.p.a.n<0?"subtracted":"added")+", so undo it the same way.");
+  }
+}
+
+function onOp(e){
+  S.opIn=e.target.value;
+  const other = e.target.id==="opA" ? document.getElementById("opB") : document.getElementById("opA");
+  if(other && other.value!==S.opIn) other.value=S.opIn;
+  updatePreview("opA"); updatePreview("opB");
+  const v=parseRat(S.opIn);          /* the sign came from the button, so only size matters here */
+  clearTimers();
+  if(v && same(absR(v),absR(op()))) later(250,function(){ S.hint=false; setPhase("cancel"); });
+}
+function onLcd(e){
+  S.lcdIn=e.target.value;
+  const d=parseWhole(S.lcdIn);
+  const ok = d && d>0 && d%S.p.C.d===0 && d%op().d===0;
+  clearTimers();
+  if(ok) later(250,function(){ setPhase("equiv"); });
+}
+function onEquiv(e){
+  if(e.target.id==="e1") S.e1=e.target.value; else S.e2=e.target.value;
+  const b1=document.getElementById("e1"), b2=document.getElementById("e2");
+  if(b1) b1.className="box"+wideCls()+" small"+(e1ok()?" ok":"");
+  if(b2) b2.className="box"+wideCls()+" small"+(e2ok()?" ok":"");
+  clearTimers();
+  if(e.target.id==="e1" && e1ok() && !e2ok() && b2) b2.focus();
+  if(e1ok() && e2ok()) later(450,function(){ S.hint=false; setPhase("compute"); });
+}
+function onCompute(e){
+  S.valIn=e.target.value;
+  updatePreview("ans");
+  const parts=parseParts(S.valIn);
+  clearTimers();
+  if(!parts || !same(R(parts.n,parts.d),S.p.T)) return;
+  const simplest = parts.n===S.p.T.n && parts.d===S.p.T.d;
+  later(250,function(){
+    if(isFrac() && !simplest){ S.rawShown={n:parts.n,d:parts.d}; S.hint=false; setPhase("simplify"); }
+    else if(S.p.negVar){ S.hint=false; setPhase("flip"); }
+    else finish();
+  });
+}
+function onSimplify(e){
+  S.simpIn=e.target.value;
+  updatePreview("simp");
+  const parts=parseParts(S.simpIn);
+  clearTimers();
+  if(parts && parts.n===S.p.T.n && parts.d===S.p.T.d){
+    later(250,function(){ if(S.p.negVar){ S.hint=false; setPhase("flip"); } else finish(); });
+  }
+}
+function onFlip(e){
+  S.flipIn=e.target.value;
+  updatePreview("flip");
+  const v=parseRat(S.flipIn);
+  clearTimers();
+  if(v && same(v,S.p.sol)) later(250,finish);
+}
+
+document.addEventListener("keydown",function(e){
+  if(Shell.active!==KEY) return;
+  if(e.key==="Enter" && S.phase==="check") nextProblem();
+});
+
+return {start:begin};
+
+})();
+/* ================= muldiv ================= */
+Shell.engines["muldiv"] = (function(){
+const KEY="muldiv";
+
+/* ============ formatting ============ */
+const MINUS="\u2212", TIMES="\u00d7", DIV="\u00f7";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function dash(s){return String(s).replace(/-/g,MINUS);}
+
+/* ============ parsing ============ */
+function parseInt2(raw){
+  if(raw===null||raw===undefined) return null;
+  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g,"");
+  const m=s.match(/^([+-]?)(\d+)$/);
+  if(!m) return null;
+  return (m[1]==="-"?-1:1)*(+m[2]);
+}
+
+/* ============ problem generation ============ */
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function sign(){return Math.random()<0.35?-1:1;}
+const VARS=["x","y","n","m","k","t","w","p","h","r","b","c"];
+
+/* a mul problem is written with multiplication (5y = 35) and undone by dividing */
+function genMul(){
+  const a=rint(2,12)*sign(), sol=rint(2,12)*sign();
+  return {needs:"divide", a:a, sol:sol, C:a*sol, V:pick(VARS), varLeft:Math.random()<0.5};
+}
+/* a div problem is written with division (y/4 = 3) and undone by multiplying */
+function genDiv(){
+  const a=rint(2,12), C=rint(2,12)*sign();
+  return {needs:"multiply", a:a, sol:a*C, C:C, V:pick(VARS), varLeft:Math.random()<0.5};
+}
+function genProblem(){
+  return Math.random()<0.5?genMul():genDiv();
+}
+
+/* ============ state ============ */
+const S={
+  p:genProblem(), phase:"pick",
+  opIn:"", ansIn:"", miss:"", hint:false, done:0, streak:0, clean:true, firstId:null
+};
+const clearTimers=Shell.clearTimers, later=Shell.later;
+
+function after(){return ["cancel","compute","solved","check"].indexOf(S.phase)>=0;}
+function broughtDown(){return ["compute","solved","check"].indexOf(S.phase)>=0;}
+function solvedYet(){return ["solved","check"].indexOf(S.phase)>=0;}
+function moved(){return S.phase!=="pick";}           /* the operation has been chosen */
+function undoNum(){return S.p.a;}                    /* the number both sides get worked by */
+
+/* ============ rendering pieces ============ */
+function boxHTML(id,val,extra){
+  return '<input id="'+id+'" class="box'+(extra||"")+'" value="'+esc(val)+'" autocomplete="off" spellcheck="false" inputmode="text">';
+}
+function cell(html,cls){return '<div class="cell '+(cls||"")+'">'+html+'</div>';}
+function dfrac(t,b,cls){
+  return '<span class="dfrac '+(cls||"")+'"><span class="t">'+t+'</span>'
+       + '<span class="bar"></span><span class="b">'+b+'</span></span>';
+}
+function mgroup(mult,inner,tall,cls){
+  return '<span class="mgroup'+(tall?" tall":"")+' '+(cls||"")+'">'+mult
+       + '<span class="paren">(</span>'+inner+'<span class="paren">)</span></span>';
+}
+function strikeCls(){return S.phase==="cancel"?"cancelling":(after()?"struck":"");}
+function wrapStrike(html){
+  const c=strikeCls();
+  return c?'<span class="'+c+'">'+html+'</span>':html;
+}
+
+/* the variable term exactly as the problem is written: 5y  or  y over 4 */
+function varTermHTML(){
+  const p=S.p;
+  if(p.needs==="divide") return wrapStrike(dash(p.a))+p.V;
+  return dfrac(p.V,wrapStrike(String(p.a)));
+}
+
+/* the side of the equation holding the variable */
+function varSideHTML(id){
+  const p=S.p;
+  if(!moved()) return varTermHTML();
+  if(p.needs==="divide"){
+    const den = S.phase==="enter" ? boxHTML(id,S.opIn) : wrapStrike(dash(p.a));
+    return dfrac(varTermHTML(),den,"grow");
+  }
+  const mult = S.phase==="enter" ? boxHTML(id,S.opIn) : wrapStrike(String(p.a));
+  return mgroup(mult,varTermHTML(),true,"fade");
+}
+
+/* the side of the equation holding the lone number */
+function numSideHTML(id){
+  const p=S.p;
+  const live = after() ? "blue" : "";
+  if(!moved()) return dash(p.C);
+  if(p.needs==="divide"){
+    const den = S.phase==="enter" ? boxHTML(id,S.opIn) : dash(p.a);
+    return dfrac(dash(p.C),den,"grow "+live);
+  }
+  const mult = S.phase==="enter" ? boxHTML(id,S.opIn) : String(p.a);
+  return mgroup(mult,dash(p.C),false,"fade "+live);
+}
+
+
+function renderEquation(){
+  const p=S.p;
+  const leftId="opA", rightId="opB";
+  const vCell = cell(varSideHTML(p.varLeft?leftId:rightId));
+  const nCell = cell(numSideHTML(p.varLeft?rightId:leftId));
+  const eCell = cell("=","eqsign");
+
+  let html = (p.varLeft?[vCell,eCell,nCell]:[nCell,eCell,vCell]).join("");
+
+  if(broughtDown()){
+    html += '<div class="spacer"></div>';
+    const ansHTML = S.phase==="compute"
+      ? boxHTML("ans",S.ansIn,"")
+      : '<span class="green">'+dash(p.sol)+'</span>';
+    const a1=cell('<span class="'+(solvedYet()?"green":"")+'">'+p.V+'</span>');
+    const a2=cell("=","eqsign");
+    const a3=cell(ansHTML);
+    html += (p.varLeft?[a1,a2,a3]:[a3,a2,a1]).join("");
+  }
+  document.getElementById("eq").innerHTML=html;
+  if(S.phase==="enter") S.firstId=leftId;
+}
+
+function renderPanel(){
+  const el=document.getElementById("panel"), p=S.p;
+  if(S.phase==="pick"){
+    el.innerHTML=Shell.opsHTML();
+  } else if(S.phase==="check"){
+    const solG='<span class="green">'+dash(p.sol)+'</span>';
+    const sub = p.needs==="divide"
+      ? dash(p.a)+'<span class="paren">(</span>'+solG+'<span class="paren">)</span>'
+      : dfrac(solG,String(p.a));
+    const orig = p.needs==="divide" ? dash(p.a)+p.V : dfrac(p.V,String(p.a));
+    const C=dash(p.C), eq=' <span class="eqsign">=</span> ', tick=' <span class="green">&#10003;</span>';
+    const origLine = p.varLeft ? orig+eq+C : C+eq+orig;
+    const subLine  = p.varLeft ? sub+eq+C+tick : C+eq+sub+tick;
+    el.innerHTML='<div class="checkline"><div class="orig">'+origLine+'</div><div class="sub">'+subLine+'</div></div>';
+  } else {
+    el.innerHTML="";
+  }
+}
+
+function renderPrompt(){
+  const el=document.getElementById("promptbar"), p=S.p, V=p.V, a=p.a, C=p.C;
+  const hintBtn='<button class="link" id="hintBtn">'+(S.hint?"Hide hint":"Hint")+'</button>';
+  const diffSigns=(a<0)!==(C<0);
+  let h="";
+
+  if(S.phase==="pick"){
+    h='<div class="prompt"><span>What do you do to <strong>both sides</strong> to get '+V+' by itself?</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">'+(p.needs==="divide"
+      ? V+' is being <strong>multiplied</strong> by '+dash(a)+'. Division undoes multiplication &mdash; pick '+DIV+'.'
+      : V+' is being <strong>divided</strong> by '+a+'. Multiplication undoes division &mdash; pick ( ).')+'</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="enter"){
+    h='<div class="prompt"><span>'+(p.needs==="divide"
+      ? 'Divide both sides by the number multiplying '+V+'.'
+      : 'Multiply both sides by the number underneath '+V+'.')+'</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">'+(p.needs==="divide"
+      ? 'Write '+dash(a)+' under each side &mdash; sign and all.'
+      : 'Write '+a+' outside each set of parentheses.')+'</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="cancel"){
+    h='<div class="prompt"><span class="math">'+dash(a)+'</span><span>over</span><span class="math">'+dash(a)+'</span>'
+      +'<span>makes 1, so they cancel &mdash; leaving '+V+' alone.</span></div>';
+  }
+  else if(S.phase==="compute"){
+    const expr = p.needs==="divide"
+      ? dash(C)+' '+DIV+' '+dash(a)
+      : dash(a)+' '+TIMES+' '+dash(C);
+    h='<div class="prompt"><span>Now finish the other side:</span>'
+      +'<span class="math blue">'+expr+'</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">'+(p.needs==="divide"
+      ? 'How many '+Math.abs(a)+'s fit into '+Math.abs(C)+'? '
+      : Math.abs(a)+' groups of '+Math.abs(C)+'. ')
+      +(diffSigns?'One number is negative, so the answer is negative.'
+                 :'Both signs match, so the answer is positive.')+'</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="solved"){
+    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
+  }
+  else if(S.phase==="check"){
+    h='<div class="row-between"><div class="prompt"><span>Put</span><span class="math">'+dash(p.sol)
+      +'</span><span>back in for '+V+' and both sides match.</span></div>'
+      +'<button class="next" id="nextBtn">Next problem &rarr;</button></div>';
+  }
+  if(S.miss) h+='<div class="missline">'+S.miss+'</div>';
+  if(S.phase!=="check") h+='<div><button class="link skip" id="skipBtn">Skip</button></div>';
+  el.innerHTML=h;
+}
+
+function render(){
+  Shell.head(KEY); renderEquation(); renderPanel(); renderPrompt(); attach(); focusFirst();
+}
+function focusFirst(){
+  later(60,function(){
+    const el=S.firstId&&document.getElementById(S.firstId);
+    if(el) el.focus();
+  });
+}
+
+/* ============ flow ============ */
+function setPhase(ph){
+  clearTimers();
+  S.phase=ph; S.miss="";
+  if(ph==="enter") S.firstId="opA";
+  else if(ph==="compute") S.firstId="ans";
+  else S.firstId=null;
+  render();
+  if(ph==="cancel") later(1700,function(){ setPhase("compute"); });
+  if(ph==="solved") later(850,function(){ setPhase("check"); });
+}
+function finish(){
+  Shell.solved(S.clean);
+  setPhase("solved");
+}
+function flagMiss(msg){
+  S.clean=false; S.miss=msg; renderPrompt(); attach();
+  later(2600,function(){ S.miss=""; renderPrompt(); attach(); });
+}
+function missMessage(){
+  if(S.phase==="enter") return "Not quite \u2014 check the number and its sign, then try again.";
+  if(S.phase==="compute") return "Not quite \u2014 check the sign, then try again.";
+  return "";
+}
+function nextProblem(){ Shell.next(); }
+function begin(){
+  clearTimers();
+  S.p=genProblem(); S.phase="pick";
+  S.opIn=""; S.ansIn=""; S.hint=false; S.clean=true; S.miss=""; S.firstId=null;
+  render();
+}
+
+/* ============ input handling ============ */
+function attach(){
+  const hb=document.getElementById("hintBtn");
+  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); };
+  const sb=document.getElementById("skipBtn");
+  if(sb) sb.onclick=nextProblem;
+  const nb=document.getElementById("nextBtn");
+  if(nb) nb.onclick=nextProblem;
+
+  Shell.bindOps(chooseOp);
+
+  bind("opA",onOp); bind("opB",onOp); bind("ans",onCompute);
+}
+function bind(id,handler){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.oninput=handler;
+  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); flagMiss(missMessage()); } };
+}
+
+function chooseOp(kind,btn){
+  if(kind===S.p.needs){ S.hint=false; setPhase("enter"); return; }
+  S.clean=false;
+  Shell.shake(btn);
+  if(kind==="add"||kind==="sub"){
+    flagMiss("Nothing is being added here \u2014 "+S.p.V+" is "
+      +(S.p.needs==="divide" ? "multiplied by "+dash(S.p.a) : "divided by "+S.p.a)
+      +", so adding or subtracting won't free it.");
+  } else {
+    flagMiss(S.p.needs==="divide"
+      ? "That side is already a multiplication \u2014 multiplying again won't free "+S.p.V+"."
+      : S.p.V+" is already being divided \u2014 dividing again won't free it.");
+  }
+}
+
+function onOp(e){
+  S.opIn=e.target.value;
+  const other = e.target.id==="opA" ? document.getElementById("opB") : document.getElementById("opA");
+  if(other && other.value!==S.opIn) other.value=S.opIn;
+  const v=parseInt2(S.opIn);
+  const ok = v!==null && v===undoNum();
+  const cls="box"+(ok?" ok":"");
+  ["opA","opB"].forEach(function(id){const b=document.getElementById(id);if(b)b.className=cls;});
+  clearTimers();
+  if(ok) later(300,function(){ S.hint=false; setPhase("cancel"); });
+}
+function onCompute(e){
+  S.ansIn=e.target.value;
+  const v=parseInt2(S.ansIn);
+  clearTimers();
+  if(v!==null && v===S.p.sol) later(280,finish);
+}
+
+document.addEventListener("keydown",function(e){
+  if(Shell.active!==KEY) return;
+  if(e.key==="Enter" && S.phase==="check") nextProblem();
+});
+
+return {start:begin};
+
+})();
+/* ================= frac ================= */
+Shell.engines["frac"] = (function(){
+const KEY="frac";
+
+/* ============ formatting ============ */
+const MINUS="\u2212", TIMES="\u00d7";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function dash(s){return String(s).replace(/-/g,MINUS);}
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}return a||1;}
+
+/* ============ parsing ============ */
+function parseInt2(raw){
+  if(raw===null||raw===undefined) return null;
+  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g,"");
+  const m=s.match(/^([+-]?)(\d+)$/);
+  if(!m) return null;
+  return (m[1]==="-"?-1:1)*(+m[2]);
+}
+/* "6" or "7/3" — a top-heavy fraction is fine here, a mixed number is not */
+function parseFracIn(raw){
+  if(raw===null||raw===undefined) return null;
+  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g,"");
+  let m;
+  if((m=s.match(/^([+-]?)(\d+)\/(\d+)$/))){
+    const d=+m[3];
+    return d? {n:(m[1]==="-"?-1:1)*(+m[2]), d:d} : null;
+  }
+  if((m=s.match(/^([+-]?)(\d+)$/))) return {n:(m[1]==="-"?-1:1)*(+m[2]), d:1};
+  return null;
+}
+/* "2 1/3" — a whole number and a leftover fraction */
+function parseMixIn(raw){
+  if(raw===null||raw===undefined) return null;
+  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g," ");
+  const m=s.match(/^([+-]?)\s*(\d+)\s+(\d+)\/(\d+)$/);
+  if(!m) return null;
+  const d=+m[4];
+  return d? {sg:(m[1]==="-"?-1:1), w:+m[2], n:+m[3], d:d} : null;
+}
+
+/* ============ problem generation ============ */
+function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function properDivs(n){const out=[];for(let d=2;d<n;d++) if(n%d===0) out.push(d);return out;}
+const VARS=["x","y","n","m","k","t","w","p","h","r","b","c"];
+
+/* (s\u00b7a/b)V = C.  How much of the a cancels into C decides the shape of the problem:
+   all of it  -> a whole-number answer, the old behaviour
+   some of it -> a fraction answer after a partial cancel
+   none of it -> no cancelling step at all */
+function genProblem(){
+  const roll=Math.random();
+  const kind = roll<0.45 ? "full" : (roll<0.60 ? "partial" : "none");
+  for(let guard=0; guard<600; guard++){
+    let a,b;
+    if(kind==="partial"){                       /* a has to be composite to cancel part way */
+      a=pick([4,6,8,9]);
+      do{ b=rint(2,9); }while(b===a || gcd(a,b)!==1);
+    } else {
+      do{ b=rint(2,9); a=rint(2,9); }while(a===b || gcd(a,b)!==1);
+    }
+    const s=Math.random()<0.5?-1:1;
+    let C;
+    if(kind==="full"){                          /* cancels all the way */
+      C = a*rint(2,10)*(Math.random()<0.4?-1:1);
+    } else if(kind==="partial"){                /* cancels part of the way */
+      const g=pick(properDivs(a)), rest=a/g, m=rint(2,9);
+      if(gcd(m,rest)!==1) continue;
+      C = g*m*(Math.random()<0.4?-1:1);
+    } else {                                    /* nothing in common: no cancelling */
+      C = rint(2,15)*(Math.random()<0.4?-1:1);
+      if(gcd(a,Math.abs(C))!==1) continue;
+    }
+    const g=gcd(a,Math.abs(C)), den=a/g, num=s*b*(C/g);
+    if(Math.abs(C)>60 || Math.abs(num)>72) continue;
+    return {a:a, b:b, s:s, C:C, num:num, den:den, V:pick(VARS), varLeft:Math.random()<0.5};
+  }
+  return {a:2,b:3,s:1,C:4,num:6,den:1,V:"x",varLeft:true};
+}
+
+/* ============ state ============ */
+const S={
+  p:genProblem(), phase:"pick",
+  numIn:"", denIn:"", simpDen:"", simpNum:"", ansIn:"", mixIn:"",
+  miss:"", hint:false, clean:true, firstId:null
+};
+const clearTimers=Shell.clearTimers, later=Shell.later;
+
+function moved(){return S.phase!=="pick";}
+function after(){return ["cancel","simplify","compute","mixed","solved","check"].indexOf(S.phase)>=0;}
+function reduced(){return ["compute","mixed","solved","check"].indexOf(S.phase)>=0;}
+function broughtDown(){return reduced();}
+function solvedYet(){return ["solved","check"].indexOf(S.phase)>=0;}
+
+/* how much the two numbers share, and what is left after cancelling */
+function gFac(){return gcd(S.p.a,Math.abs(S.p.C));}
+function canSimp(){return gFac()>1;}
+function redDen(){return S.p.a/gFac();}
+function redNum(){return S.p.C/gFac();}
+function improper(){return S.p.den>1 && Math.abs(S.p.num)>S.p.den;}
+function wholePart(){return Math.trunc(Math.abs(S.p.num)/S.p.den);}
+function restPart(){return Math.abs(S.p.num)%S.p.den;}
+
+/* ============ rendering pieces ============ */
+function boxHTML(id,val,extra){
+  return '<input id="'+id+'" class="box'+(extra||"")+'" value="'+esc(val)+'" autocomplete="off" spellcheck="false" inputmode="text">';
+}
+function previewHTML(id){ return '<span class="preview" id="'+id+'-pv"></span>'; }
+function cell(html,cls){return '<div class="cell '+(cls||"")+'">'+html+'</div>';}
+function dfrac(t,b){
+  return '<span class="dfrac"><span class="t">'+t+'</span><span class="bar"></span><span class="b">'+b+'</span></span>';
+}
+function mgroup(mult,inner,tall,cls){
+  return '<span class="mgroup'+(tall?" tall":"")+' '+(cls||"")+'">'+mult
+       + '<span class="paren">(</span>'+inner+'<span class="paren">)</span></span>';
+}
+/* top-heavy form, the way it comes out of the multiplication */
+function fracHTML(n,d){
+  if(d===1) return dash(String(n));
+  return (n<0?MINUS:"")+dfrac(Math.abs(n),d);
+}
+/* the same value written as a whole number and a leftover fraction */
+function mixedHTML(n,d){
+  if(d===1) return dash(String(n));
+  const w=Math.trunc(Math.abs(n)/d), r=Math.abs(n)%d;
+  if(w===0) return (n<0?MINUS:"")+dfrac(r,d);
+  return '<span class="mixnum">'+(n<0?MINUS:"")+'<span class="whole">'+w+'</span>'+dfrac(r,d)+'</span>';
+}
+function slashCls(){
+  return S.phase==="cancel" ? "slash draw" : (after() ? "slash dim" : "");
+}
+function coefHTML(cancelled){
+  const p=S.p;
+  const inner=(p.s<0?MINUS:"")+dfrac(p.a,p.b);
+  return cancelled ? '<span class="'+slashCls()+'">'+inner+'</span>' : inner;
+}
+function recipHTML(cancelled){
+  const p=S.p;
+  const inner=(p.s<0?MINUS:"")+dfrac(p.b,p.a);
+  return cancelled ? '<span class="'+slashCls()+'">'+inner+'</span>' : inner;
+}
+function fracBoxHTML(nId,dId){
+  const ok=recipOK();
+  const cls=" mini"+(ok?" ok":"");
+  return '<span class="fracbox">'+boxHTML(nId,S.numIn,cls)
+       + '<span class="bar"></span>'+boxHTML(dId,S.denIn,cls)+'</span>';
+}
+function recipOK(){
+  const p=S.p, n=parseInt2(S.numIn), d=parseInt2(S.denIn);
+  if(n===null||d===null||n===0||d===0) return false;
+  return Math.abs(n)===p.b && Math.abs(d)===p.a && ((n*d>0)===(p.s>0));
+}
+
+/* ---- cross-simplifying the number side ---- */
+function simpDenOK(){return parseInt2(S.simpDen)===redDen();}
+function simpNumOK(){const v=parseInt2(S.simpNum); return v!==null && v===redNum();}
+function simpOK(){return simpDenOK()&&simpNumOK();}
+function simpPartial(){
+  const dv=parseInt2(S.simpDen), nv=parseInt2(S.simpNum);
+  if(dv===null||nv===null||dv<=redDen()) return false;
+  const g=S.p.a/dv;
+  return Number.isInteger(g) && g>1 && nv===S.p.C/g;
+}
+function pendCls(ok,live){return live ? (ok?"slash draw":"pend") : "slash cross";}
+function recipCancelHTML(live){
+  const p=S.p;
+  const den='<span class="cx below"><span id="slD" class="'+pendCls(simpDenOK(),live)+'">'+p.a+'</span>'
+    + '<span class="redu">'+(live?boxHTML("sd",S.simpDen," tiny"+(simpDenOK()?" ok":"")):String(redDen()))+'</span></span>';
+  return (p.s<0?MINUS:"")+dfrac(p.b,den);
+}
+function constCancelHTML(live){
+  return '<span class="cx above"><span class="redu">'
+    + (live?boxHTML("sn",S.simpNum," tiny"+(simpNumOK()?" ok":"")):dash(redNum()))
+    + '</span><span id="slN" class="'+pendCls(simpNumOK(),live)+'">'+dash(S.p.C)+'</span></span>';
+}
+
+function varSideHTML(nId,dId){
+  const p=S.p;
+  const term=coefHTML(after())+p.V;
+  if(!moved()) return term;
+  const mult = S.phase==="enter" ? fracBoxHTML(nId,dId) : recipHTML(true);
+  return mgroup(mult,term,true,"fade");
+}
+function numSideHTML(nId,dId){
+  const p=S.p;
+  if(!moved()) return dash(p.C);
+  const live = after() ? "blue" : "";
+  if(canSimp()){
+    if(S.phase==="simplify") return mgroup(recipCancelHTML(true),constCancelHTML(true),true,"roomy "+live);
+    if(reduced()) return mgroup(recipCancelHTML(false),constCancelHTML(false),true,"roomy "+live);
+  }
+  const mult = S.phase==="enter" ? fracBoxHTML(nId,dId) : recipHTML(false);
+  return mgroup(mult,dash(p.C),true,"fade "+live);
+}
+
+function renderEquation(){
+  const p=S.p;
+  const vCell = cell(p.varLeft?varSideHTML("nL","dL"):varSideHTML("nR","dR"));
+  const nCell = cell(p.varLeft?numSideHTML("nR","dR"):numSideHTML("nL","dL"));
+  const eCell = cell("=","eqsign");
+
+  let html=(p.varLeft?[vCell,eCell,nCell]:[nCell,eCell,vCell]).join("");
+
+  if(broughtDown()){
+    html+='<div class="rule"></div>';
+    let ansHTML;
+    if(S.phase==="compute"){
+      ansHTML = boxHTML("ans",S.ansIn,"")+previewHTML("ans");
+    } else if(S.phase==="mixed"){
+      ansHTML = '<span class="faint">'+fracHTML(p.num,p.den)+'</span><span class="faint">&rarr;</span>'
+              + boxHTML("mix",S.mixIn," wide")+previewHTML("mix");
+    } else {
+      ansHTML = '<span class="green">'+mixedHTML(p.num,p.den)+'</span>';
+    }
+    const a1=cell('<span class="'+(solvedYet()?"green":"")+'">'+p.V+'</span>');
+    const a2=cell("=","eqsign");
+    const a3=cell(ansHTML);
+    html+=(p.varLeft?[a1,a2,a3]:[a3,a2,a1]).join("");
+  }
+  document.getElementById("eq").innerHTML=html;
+  if(S.phase==="enter") S.firstId = parseInt2(S.numIn)===null ? "nL" : "dL";
+}
+
+function renderPanel(){
+  const el=document.getElementById("panel"), p=S.p;
+  if(S.phase==="pick"){
+    el.innerHTML=Shell.opsHTML();
+  } else if(S.phase==="check"){
+    const solG='<span class="green">'+fracHTML(p.num,p.den)+'</span>';
+    const orig=coefHTML(false)+p.V;
+    const sub=coefHTML(false)+'<span class="paren">(</span>'+solG+'<span class="paren">)</span>';
+    const C=dash(p.C), eq=' <span class="eqsign">=</span> ', tick=' <span class="green">&#10003;</span>';
+    el.innerHTML='<div class="checkline"><div class="orig">'
+      +(p.varLeft?orig+eq+C:C+eq+orig)+'</div><div class="sub">'
+      +(p.varLeft?sub+eq+C+tick:C+eq+sub+tick)+'</div></div>';
+  } else {
+    el.innerHTML="";
+  }
+}
+
+function renderPrompt(){
+  const el=document.getElementById("promptbar"), p=S.p, V=p.V;
+  const hintBtn='<button class="link" id="hintBtn">'+(S.hint?"Hide hint":"Hint")+'</button>';
+  const coef=coefHTML(false), rec=recipHTML(false);
+  const negAns=(p.s<0)!==(p.C<0);
+  let h="";
+
+  if(S.phase==="pick"){
+    h='<div class="prompt"><span>What do you do to <strong>both sides</strong> to get '+V+' by itself?</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>'+V+' is multiplied by</span><span class="math">'+coef+'</span>'
+      +'<span>. A fraction times its reciprocal is 1, so multiply both sides &mdash; press ( ).</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="enter"){
+    h='<div class="prompt"><span>Multiply both sides by the reciprocal of</span>'
+      +'<span class="math">'+coef+'</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>Flip it over: '+p.b+' on top, '+p.a+' on the bottom. '
+      +(p.s<0?'The coefficient is negative, so the reciprocal is negative too &mdash; type the sign on top.'
+             :'The coefficient is positive, so the reciprocal is positive.')+'</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="cancel"){
+    h='<div class="prompt"><span class="math">'+rec+'</span><span>'+TIMES+'</span><span class="math">'+coef+'</span>'
+      +'<span>makes 1, so the coefficient is gone &mdash; leaving '+V+' alone.</span></div>';
+  }
+  else if(S.phase==="simplify"){
+    h='<div class="prompt"><span><strong>Simplify before you multiply.</strong> '
+      +p.a+' and '+Math.abs(p.C)+' share a factor &mdash; divide them both by it.</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>'+p.a+' &divide; '+gFac()+' = '+redDen()+', and '
+      +Math.abs(p.C)+' &divide; '+gFac()+' = '+Math.abs(redNum())+'.'
+      +(p.C<0?' The number stays negative.':'')
+      +(redDen()>1?' They don\'t cancel all the way &mdash; '+redDen()+' is left underneath.':'')+'</span></div>';
+    if(simpPartial()) h+='<div class="noteline">That is a common factor, but not the biggest one '
+      +'&mdash; those two can still be cancelled further.</div>';
+    h+='</div>';
+  }
+  else if(S.phase==="compute"){
+    const lead = p.den===1 ? 'The hard part is gone. Now multiply:'
+      : (canSimp() ? 'It only cancelled part of the way, so the answer is a fraction:'
+                   : 'Nothing cancels &mdash; '+p.a+' and '+Math.abs(p.C)
+                     +' share no factors &mdash; so the answer is a fraction:');
+    h='<div class="prompt"><span>'+lead+'</span>'
+      +'<span class="math blue">'+fracHTML(p.s*p.b,p.den)+' '+TIMES+' '+dash(redNum())+'</span>'
+      +(p.den===1?'':'<span class="faint">Type it like 7/3.</span>')+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>'+(p.den===1
+      ? (canSimp()?'Because you cancelled first, these are small numbers. ':'')
+      : 'Multiply the top numbers: '+Math.abs(p.s*p.b)+' '+TIMES+' '+Math.abs(redNum())+' = '
+        +Math.abs(p.num)+', and keep '+p.den+' on the bottom. ')
+      +(negAns?'One factor is negative, so the answer is negative.':'The signs match, so the answer is positive.')
+      +'</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="mixed"){
+    h='<div class="prompt"><span class="math">'+fracHTML(p.num,p.den)+'</span>'
+      +'<span>is top-heavy. Write it as a mixed number.</span>'
+      +'<span class="faint">Type it like 2 1/3.</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>'+p.den+' fits into '+Math.abs(p.num)+' '
+      +wholePart()+' times, with '+restPart()+' left over'
+      +(p.num<0?'. The answer stays negative':'')+'.</span></div>';
+    h+='</div>';
+  }
+  else if(S.phase==="solved"){
+    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
+  }
+  else if(S.phase==="check"){
+    h='<div class="row-between"><div class="prompt"><span>Put</span><span class="math">'+fracHTML(p.num,p.den)
+      +'</span><span>back in for '+V
+      +(improper()?' &mdash; the top-heavy form is the easy one to multiply &mdash; and both sides match.'
+                  :' and both sides match.')+'</span></div>'
+      +'<button class="next" id="nextBtn">Next problem &rarr;</button></div>';
+  }
+  if(S.miss) h+='<div class="missline">'+S.miss+'</div>';
+  if(S.phase!=="check") h+='<div><button class="link skip" id="skipBtn">Skip</button></div>';
+  el.innerHTML=h;
+}
+
+function updatePreview(id,asMixed){
+  const pv=document.getElementById(id+"-pv");
+  if(!pv) return;
+  const box=document.getElementById(id);
+  const raw=box?box.value:"";
+  if(asMixed){
+    const m=parseMixIn(raw);
+    pv.innerHTML = m ? mixedHTML(m.sg*(m.w*m.d+m.n), m.d) : "";
+  } else {
+    const f=parseFracIn(raw);
+    pv.innerHTML = (f && f.d!==1) ? fracHTML(f.n,f.d) : "";
+  }
+}
+
+function render(){
+  Shell.head(KEY); renderEquation(); renderPanel(); renderPrompt(); attach();
+  updatePreview("ans",false); updatePreview("mix",true);
+  focusFirst();
+}
+function focusFirst(){
+  later(60,function(){
+    const el=S.firstId&&document.getElementById(S.firstId);
+    if(el) el.focus();
+  });
+}
+
+/* ============ flow ============ */
+function setPhase(ph){
+  clearTimers();
+  S.phase=ph; S.miss="";
+  if(ph==="enter") S.firstId="nL";
+  else if(ph==="simplify") S.firstId="sd";
+  else if(ph==="compute") S.firstId="ans";
+  else if(ph==="mixed") S.firstId="mix";
+  else S.firstId=null;
+  render();
+  if(ph==="cancel") later(1900,function(){ setPhase(canSimp()?"simplify":"compute"); });
+  if(ph==="solved") later(850,function(){ setPhase("check"); });
+}
+function finish(){
+  Shell.solved(S.clean);
+  setPhase("solved");
+}
+function flagMiss(msg){
+  S.clean=false; S.miss=msg; renderPrompt(); attach();
+  later(2800,function(){ S.miss=""; renderPrompt(); attach(); });
+}
+function missMessage(){
+  if(S.phase==="enter") return "Not quite \u2014 flip the fraction over, and keep the sign in mind.";
+  if(S.phase==="simplify") return "Divide both numbers by the same factor, then write what each one becomes.";
+  if(S.phase==="compute") return "Not quite \u2014 check the size and the sign, then try again.";
+  if(S.phase==="mixed") return "Not quite \u2014 write a whole number and the leftover fraction, like 2 1/3.";
+  return "";
+}
+function nextProblem(){ Shell.next(); }
+function begin(){
+  clearTimers();
+  S.p=genProblem(); S.phase="pick";
+  S.numIn=""; S.denIn=""; S.simpDen=""; S.simpNum=""; S.ansIn=""; S.mixIn="";
+  S.hint=false; S.clean=true; S.miss=""; S.firstId=null;
+  render();
+}
+
+/* ============ input handling ============ */
+function attach(){
+  const hb=document.getElementById("hintBtn");
+  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); };
+  const sb=document.getElementById("skipBtn");
+  if(sb) sb.onclick=nextProblem;
+  const nb=document.getElementById("nextBtn");
+  if(nb) nb.onclick=nextProblem;
+  Shell.bindOps(chooseOp);
+
+  ["nL","nR"].forEach(function(id){bind(id,onNum);});
+  ["dL","dR"].forEach(function(id){bind(id,onDen);});
+  bind("sd",onSimpDen); bind("sn",onSimpNum);
+  bind("ans",onCompute); bind("mix",onMixed);
+}
+function bind(id,handler){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.oninput=handler;
+  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); flagMiss(missMessage()); } };
+}
+function chooseOp(kind,btn){
+  if(kind==="multiply"){ S.hint=false; setPhase("enter"); return; }
+  S.clean=false;
+  Shell.shake(btn);
+  if(kind==="divide"){
+    flagMiss("Dividing by a fraction is the hard way \u2014 flipping it over and multiplying "
+      +"does the same job. Press ( ).");
+  } else {
+    flagMiss("Nothing is being added here \u2014 "+S.p.V
+      +" is multiplied by a fraction, so adding or subtracting won't free it.");
+  }
+}
+function mirror(ids,val){
+  ids.forEach(function(id){
+    const b=document.getElementById(id);
+    if(b && b.value!==val) b.value=val;
+  });
+}
+function paintFrac(){
+  const cls="box mini"+(recipOK()?" ok":"");
+  ["nL","nR","dL","dR"].forEach(function(id){
+    const b=document.getElementById(id); if(b) b.className=cls;
+  });
+}
+function onNum(e){
+  S.numIn=e.target.value;
+  mirror(["nL","nR"],S.numIn);
+  paintFrac();
+  clearTimers();
+  if(recipOK()){ later(320,function(){ S.hint=false; setPhase("cancel"); }); return; }
+  const n=parseInt2(S.numIn);
+  if(n!==null && Math.abs(n)===S.p.b && parseInt2(S.denIn)===null){
+    const d=document.getElementById(e.target.id==="nL"?"dL":"dR");
+    if(d) d.focus();
+  }
+}
+function onDen(e){
+  S.denIn=e.target.value;
+  mirror(["dL","dR"],S.denIn);
+  paintFrac();
+  clearTimers();
+  if(recipOK()) later(320,function(){ S.hint=false; setPhase("cancel"); });
+}
+function setCls(el,cls){ if(el && el.className!==cls) el.className=cls; }
+function paintSimp(){
+  if(S.phase!=="simplify") return;
+  setCls(document.getElementById("sd"),"box tiny"+(simpDenOK()?" ok":""));
+  setCls(document.getElementById("sn"),"box tiny"+(simpNumOK()?" ok":""));
+  setCls(document.getElementById("slD"),pendCls(simpDenOK(),true));
+  setCls(document.getElementById("slN"),pendCls(simpNumOK(),true));
+  renderPrompt(); attach();
+}
+function onSimpDen(e){
+  S.simpDen=e.target.value;
+  paintSimp(); clearTimers();
+  if(simpOK()){ later(420,function(){ S.hint=false; setPhase("compute"); }); return; }
+  if(simpDenOK() && parseInt2(S.simpNum)===null){
+    const sn=document.getElementById("sn"); if(sn) sn.focus();
+  }
+}
+function onSimpNum(e){
+  S.simpNum=e.target.value;
+  paintSimp(); clearTimers();
+  if(simpOK()) later(420,function(){ S.hint=false; setPhase("compute"); });
+}
+function onCompute(e){
+  S.ansIn=e.target.value;
+  updatePreview("ans",false);
+  const f=parseFracIn(S.ansIn);
+  clearTimers();
+  if(!f || !f.d) return;
+  if(f.n*S.p.den !== S.p.num*f.d) return;
+  later(280,function(){
+    if(improper()){ S.hint=false; setPhase("mixed"); }
+    else finish();
+  });
+}
+function onMixed(e){
+  S.mixIn=e.target.value;
+  updatePreview("mix",true);
+  const m=parseMixIn(S.mixIn);
+  clearTimers();
+  if(!m) return;
+  const p=S.p;
+  const ok = m.d===p.den && m.w===wholePart() && m.n===restPart() && ((m.sg<0)===(p.num<0));
+  if(ok) later(280,finish);
+}
+
+document.addEventListener("keydown",function(e){
+  if(Shell.active!==KEY) return;
+  if(e.key==="Enter" && S.phase==="check") nextProblem();
+});
+
+return {start:begin};
+
+})();
+
+Shell.next();
+</script>
+</body>
+</html>
