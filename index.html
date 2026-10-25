@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>One-Step Equations</title>
+<title>One-Step Equations: Add, Subtract, Multiply &amp; Divide</title>
 <style>
   :root{
     --ink:#0f172a; --line:#1e293b; --muted:#64748b; --faint:#94a3b8;
@@ -14,18 +14,20 @@
   }
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;}
+  /* scale everything with the screen so the problem fills it */
+  html{font-size:clamp(16px,1.15vw + .6vh,26px);}
   body{
     background:var(--page); color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:Tahoma,Verdana,Geneva,sans-serif;
     -webkit-font-smoothing:antialiased;
   }
   .app{height:100%;display:flex;flex-direction:column;overflow:hidden;padding:12px 16px;}
-  .wrap{width:100%;max-width:52rem;margin:0 auto;display:flex;flex-direction:column;height:100%;min-height:0;}
+  .wrap{width:100%;max-width:64rem;margin:0 auto;display:flex;flex-direction:column;height:100%;min-height:0;}
 
   /* nav tabs */
   .nav-tabs{display:flex;gap:6px;margin-bottom:12px;border-bottom:2px solid var(--edge);padding-bottom:2px;}
   .tab-btn{
-    background:none; border:none; padding:8px 14px; font-size:.9rem; font-weight:600;
+    background:none; border:none; padding:8px 14px; font-size:1.05rem; font-weight:600;
     color:var(--muted); cursor:pointer; border-radius:6px 6px 0 0; transition:all .15s ease;
   }
   .tab-btn:hover{color:var(--ink); background:var(--edge);}
@@ -45,14 +47,15 @@
   .tally .on,.tally .on b{color:var(--blue);}
 
   /* work area */
-  .work{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:8px 0;}
-  .scroller{width:100%;overflow-x:auto;}
+  .work{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 0;overflow:hidden;}
+  .fitbox{width:100%;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .scroller{width:100%;}
   .eq{display:grid;column-gap:30px;row-gap:10px;width:max-content;margin:0 auto;
-      font-family:Georgia,"Times New Roman",serif;font-size:1.85rem;}
+      font-family:Tahoma,Verdana,Geneva,sans-serif;font-size:3.2rem;}
   /* add & subtract lines up four columns: term, term, =, number */
   .eq.k-addsub{grid-template-columns:auto auto auto auto;row-gap:12px;}
   .eq.k-muldiv,.eq.k-frac{grid-template-columns:auto auto auto;}
-  .cell{min-height:3.6rem;padding:2px 0;display:flex;align-items:center;justify-content:center;gap:6px;
+  .cell{min-height:5.2rem;padding:2px 0;display:flex;align-items:center;justify-content:center;gap:6px;
         transition:opacity .7s ease-out;}
   .eq.k-addsub .cell{gap:10px;}
   .rule{grid-column:1 / -1;height:2px;margin:5px 0;border-top:2px solid var(--line);}
@@ -88,7 +91,7 @@
   /* dividing both sides draws a bar wide enough to sit over an input box */
   .eq.k-muldiv .dfrac{font-size:1em;}
   .eq.k-muldiv .dfrac > .t,.eq.k-muldiv .dfrac > .b{padding:0 8px;}
-  .eq.k-muldiv .dfrac > .bar{min-width:3.6rem;border-top-color:var(--line);}
+  .eq.k-muldiv .dfrac > .bar{min-width:5rem;border-top-color:var(--line);}
   .dfrac.grow{animation:grow .35s ease-out;}
 
   /* the reciprocal the student writes: two boxes stacked over a bar */
@@ -118,7 +121,7 @@
 
   /* parenthesised group: multiplying both sides */
   .mgroup{display:inline-flex;align-items:center;gap:9px;}
-  .mgroup.roomy{padding:1.9rem 0;}
+  .mgroup.roomy{padding:2.4rem 0;}
   .paren{font-size:1.35em;line-height:1;color:var(--line);}
   .mgroup.tall .paren{font-size:2.6em;font-weight:300;}
   .mgroup.fade{animation:grow .35s ease-out;}
@@ -128,13 +131,13 @@
   @keyframes draw{from{background-size:0% 100%;}to{background-size:100% 100%;}}
 
   /* inputs */
-  .box{height:2.5rem;width:3.5rem;border:2px solid var(--blue-b);background:var(--blue-bg);color:var(--blue);
-       border-radius:6px;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;
+  .box{height:3.6rem;width:4.8rem;border:2px solid var(--blue-b);background:var(--blue-bg);color:var(--blue);
+       border-radius:6px;text-align:center;font-family:Tahoma,Verdana,Geneva,sans-serif;font-size:2.3rem;
        outline:none;transition:border-color .15s,background .15s;}
-  .box.wide{width:5rem;}
-  .box.small{font-size:1.25rem;}
-  .box.mini{height:2.15rem;width:3.2rem;font-size:1.25rem;}
-  .box.tiny{height:1.8rem;width:2.4rem;font-size:1.05rem;border-radius:5px;}
+  .box.wide{width:6.4rem;}
+  .box.small{font-size:1.6rem;}
+  .box.mini{height:2.7rem;width:4rem;font-size:1.6rem;}
+  .box.tiny{height:2.2rem;width:3rem;font-size:1.3rem;border-radius:5px;}
   .box:focus{border-color:var(--blue);background:#fff;}
   .box.bad{border-color:#fb7185;background:var(--rose-bg);color:var(--rose);}
   .box.ok{border-color:#10b981;background:var(--green-bg);color:var(--green);}
@@ -142,45 +145,81 @@
 
   /* fraction-shaped input: box above the denominator */
   .fracin{display:inline-flex;flex-direction:column;align-items:center;gap:4px;}
-  .fracin .bar2{width:4rem;border-top:2px solid var(--line);}
-  .fracin .den{color:#475569;line-height:1;font-family:Georgia,serif;}
+  .fracin .bar2{width:5rem;border-top:2px solid var(--line);}
+  .fracin .den{color:#475569;line-height:1;font-family:Tahoma,Verdana,Geneva,sans-serif;}
 
   /* operation buttons */
   .ops{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;}
-  .op{width:5.2rem;height:4.2rem;border:2px solid var(--edge);background:#fff;color:var(--line);
-      border-radius:12px;cursor:pointer;font-family:Georgia,"Times New Roman",serif;font-size:2.1rem;
+  .op{width:7rem;height:5.6rem;border:2px solid var(--edge);background:#fff;color:var(--line);
+      border-radius:12px;cursor:pointer;font-family:Tahoma,Verdana,Geneva,sans-serif;font-size:2.9rem;
       line-height:1;display:flex;align-items:center;justify-content:center;
       transition:border-color .15s,background .15s,transform .1s;}
+  .op{position:relative;}
+  .op .key{position:absolute;top:5px;left:8px;font-size:.75rem;color:var(--faint);font-weight:600;}
   .op:hover{border-color:var(--blue-b);background:var(--blue-bg);color:var(--blue);}
+  .op:disabled{cursor:default;opacity:.5;}
+  .op.right,.op.right:disabled{opacity:1;border-color:#10b981;background:var(--green-bg);color:var(--green);
+    box-shadow:0 0 0 3px #a7f3d0;}
+  .op:disabled:hover{border-color:var(--edge);background:#fff;color:var(--line);}
   .op:active{transform:translateY(1px);}
   .op:focus-visible{outline:3px solid var(--blue-b);outline-offset:2px;}
   .op.shake{animation:shake .32s;border-color:#fb7185;background:var(--rose-bg);color:var(--rose);}
+  /* first step: click the part of the equation that's in the way */
+  .tgt{display:inline-flex;align-items:center;justify-content:center;gap:inherit;padding:2px 8px;
+       border-radius:10px;transition:border-color .15s,background .15s,color .15s;}
+  /* a number stuck to its variable (3w): keep the two together, highlight space only on the outside */
+  .tpair{display:inline-flex;align-items:center;}
+  .tpair > .tgt:first-child{padding-right:1px;}
+  .tpair > .tgt:last-child{padding-left:1px;}
+  .tgt[role=button]{cursor:pointer;}
+  .tgt[role=button]:hover{background:#fef9c3;}
+  .tgt[role=button]:focus-visible{outline:3px solid var(--blue-b);outline-offset:2px;}
+  .tgt.picked{background:#fde047;color:var(--ink);}
+  .tgt.shake{animation:shake .32s;background:var(--rose-bg);color:var(--rose);}
   @keyframes shake{0%,100%{transform:none;}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
 
   .panel{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;
-         font-family:Georgia,serif;font-size:1.35rem;}
-  .panel .lbl{font-size:.85rem;color:var(--muted);
-              font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
-  .checkline{width:100%;text-align:center;font-family:Georgia,serif;font-size:1.42rem;line-height:2.1;}
-  .checkline .orig{color:var(--faint);}
-  .checkline .sub{margin-top:12px;}
+         font-family:Tahoma,Verdana,Geneva,sans-serif;font-size:1.7rem;}
+  .panel .lbl{font-size:1rem;color:var(--muted);
+              font-family:Tahoma,Verdana,Geneva,sans-serif;}
+  .checkline{width:100%;text-align:center;font-family:Tahoma,Verdana,Geneva,sans-serif;font-size:1.8rem;line-height:2.1;}
+  .checkline .cl-orig{color:var(--ink);}
+  /* the side the student has to work out during the check */
+  .chk-hl{display:inline-block;background:#fef08a;border-radius:8px;padding:2px 8px;
+    box-shadow:0 0 0 2px #facc15;}
 
   /* prompt bar */
   .promptbar{flex-shrink:0;border-top:1px solid var(--edge);padding-top:12px;padding-bottom:4px;min-height:4.6rem;}
-  .prompt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:#334155;font-size:.98rem;}
-  .prompt .math{font-family:Georgia,serif;}
+  .prompt{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:#334155;font-size:1.35rem;}
+  .prompt .math{font-family:Tahoma,Verdana,Geneva,sans-serif;}
   .prompt strong{font-weight:600;}
   .link{background:none;border:none;padding:0;color:var(--muted);font-size:.85rem;font-family:inherit;
         text-decoration:underline;text-underline-offset:4px;cursor:pointer;}
   .link:hover{color:var(--ink);}
   .hintline{width:100%;font-size:.85rem;color:#475569;display:flex;flex-wrap:wrap;align-items:center;gap:5px;}
-  .missline{margin-top:4px;font-size:.85rem;color:var(--rose);}
-  .noteline{margin-top:4px;font-size:.85rem;color:var(--muted);}
-  .next{background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px 20px;
-        font-size:.95rem;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .missline{margin-top:4px;font-size:1.05rem;color:var(--rose);}
+  .missed-ans{font-size:1.05rem;color:#334155;}
+  .demoban{margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed var(--edge);}
+  .demoban .missline{margin-top:0;}
+  .keys{font-size:.85rem;}
+  .blank{display:inline-block;min-width:8.5em;border-bottom:2px solid currentColor;text-align:center;
+    line-height:1.15;margin:0 0 0 .15em;}
+  .blank.filled{color:var(--green);font-weight:700;border-bottom-color:var(--green);}
+  .box:disabled{opacity:1;}
+
+  /* Check button and the "type it like this" note under the work */
+  .actions{display:flex;flex-direction:column;align-items:center;gap:6px;min-height:1.6rem;}
+  .checkbtn{background:var(--blue);color:#fff;border:none;border-radius:10px;padding:10px 26px;
+    font-size:1.1rem;font-weight:600;font-family:inherit;cursor:pointer;}
+  .checkbtn:hover{background:#1e40af;}
+  .checkbtn:focus-visible{outline:3px solid var(--blue-b);outline-offset:2px;}
+  .notebar{min-height:1.3em;font-size:1rem;color:var(--muted);text-align:center;}
+  .noteline{margin-top:4px;font-size:1.05rem;color:var(--muted);}
+  .next{background:var(--ink);color:#fff;border:none;border-radius:8px;padding:12px 24px;
+        font-size:1.1rem;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;}
   .next:hover{background:#1e293b;}
   .skip{margin-top:4px;font-size:.72rem;color:var(--faint);}
-  .row-between{display:flex;align-items:center;justify-content:between;gap:12px;width:100%;}
+  .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;}
 
   @media (max-width:640px){
     .nav-tabs{overflow-x:auto;}
@@ -196,132 +235,494 @@
     .box.wide{width:4.4rem;}
     .box.mini{height:2rem;width:2.8rem;font-size:1.15rem;}
     .box.tiny{height:1.6rem;width:2.1rem;font-size:.95rem;}
+    .checkbtn{padding:8px 20px;font-size:1rem;}
     .mgroup.roomy{padding:1.5rem 0;}
   }
   @media (prefers-reduced-motion:reduce){
     .dfrac.grow,.mgroup.fade,.op.shake,.slash.draw{animation:none;}
   }
+
+  /* ---------- problem counter + turn in ---------- */
+  .drillhead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;
+    flex-shrink:0;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--edge);}
+  .dh-name{font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);}
+  .dh-right{display:inline-flex;align-items:center;gap:12px;}
+  .dh-count{font-size:1rem;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .turnin-link{font-family:inherit;font-weight:700;font-size:.75rem;padding:4px 12px;border-radius:8px;cursor:pointer;
+    background:#fff;color:var(--blue);border:2px solid #bfdbfe;}
+  .turnin-link:hover{border-color:#93c5fd;background:var(--blue-bg);}
+  .off{display:none !important;}
+
+  /* ---------- the turn-in page ---------- */
+  .turnin{position:fixed;inset:0;z-index:100;overflow:auto;background:#f4f6f9;font-size:16px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:600;color:#1a202c;
+    -webkit-user-select:text;user-select:text;}
+  .turnin button{font-family:inherit;font-weight:800;border-radius:10px;cursor:pointer;border:none;transition:background .2s;}
+  .turnin button:focus-visible{outline:3px solid #1a365d;outline-offset:3px;}
+  .check-btn{color:#fff;background-color:#2b6cb0;padding:12px 30px;font-size:1.1em;}
+  .check-btn:hover{background-color:#2c5282;}
+  .ti-inner{max-width:1060px;margin:12px auto;padding:24px clamp(18px,3vw,32px) 24px;
+    background:#fff;border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.08);
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 36px;}
+  .ti-col{min-width:0;}
+  @media (max-width:820px){ .ti-inner{grid-template-columns:minmax(0,1fr);} }
+  .ti-inner h2{color:#1a365d;font-size:1.6em;font-weight:800;margin:0 0 6px;letter-spacing:-.01em;}
+  .ti-inner h3{color:#1a365d;font-size:1.05em;font-weight:800;margin:6px 0 10px;}
+  @media (max-width:820px){ .ti-inner h3{margin-top:22px;} }
+  .ti-sub{color:#718096;font-weight:600;line-height:1.5;margin:0 0 14px;}
+  .ti-recap{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;}
+  .ti-recap > div{border:2px solid #e2e8f0;border-radius:12px;padding:10px 14px;color:#718096;font-size:.85em;}
+  .ti-recap b{display:block;color:#1a202c;font-size:1.6em;font-weight:800;}
+  .ti-log{margin-top:12px;padding:6px 0;border-top:2px solid #e2e8f0;border-bottom:2px solid #e2e8f0;}
+  .ti-log.cols{column-count:2;column-gap:22px;column-rule:1px solid #edf2f7;}
+  .ti-log.cols .ti-row{break-inside:avoid;font-size:.82em;padding:2px 2px;}
+  .ti-log.cols .ti-q{white-space:nowrap;}
+  .ti-inner.wide-log{grid-template-columns:minmax(0,5fr) minmax(0,7fr);max-width:1180px;}
+  @media (max-width:820px){ .ti-inner.wide-log{grid-template-columns:minmax(0,1fr);} .ti-log.cols{column-count:1;} }
+  .ti-empty{color:#a0aec0;margin-top:14px;}
+  .ti-row{display:flex;gap:8px;align-items:baseline;padding:3px 2px;font-size:.9em;}
+  .ti-n{color:#a0aec0;min-width:28px;text-align:right;font-size:.85em;}
+  .ti-q{flex:1;min-width:0;overflow-wrap:anywhere;}
+  .ti-arrow{color:#a0aec0;padding:0 4px;}
+  .ti-k{font-size:.8em;white-space:nowrap;color:#38a169;}
+  .ti-k.retry{color:#dd6b20;}
+  .ti-kind{margin-left:10px;font-size:.78em;color:#a0aec0;white-space:nowrap;}
+  .ti-row.extra{opacity:.7;}
+  .ti-skills{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:12px;color:#4a5568;font-size:.95em;}
+  .ti-skills b{color:#1a365d;}
+  .ti-extra{margin-top:10px;color:#718096;font-size:.92em;}
+  .ti-who{color:#2d3748;margin-bottom:6px;}
+  .ti-after.off,#gform.off{display:none;}
+  #ti-resend{margin-left:10px;}
+  #gform{margin-top:4px;}
+  .ti-warn{background:#fefcbf;color:#744210;border-radius:10px;padding:9px 13px;margin-bottom:14px;line-height:1.45;font-size:.88em;}
+  .ti-field{margin-bottom:10px;}
+  .ti-field label{display:block;margin-bottom:6px;color:#2d3748;}
+  .ti-field label em{font-style:normal;color:#a0aec0;font-weight:600;font-size:.88em;}
+  .ti-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-right:8px;
+    border-radius:50%;background:#2b6cb0;color:#fff;font-size:.8em;}
+  .ti-field input{font-family:inherit;font-size:1.05em;font-weight:700;color:#1a202c;width:100%;
+    border:2px solid #cbd5e0;border-radius:10px;padding:9px 12px;background:#fff;}
+  .ti-field input:focus{outline:none;border-color:#3182ce;}
+  .ti-check{border:2px solid #e2e8f0;border-radius:12px;padding:9px 13px;margin:4px 0 12px;background:#f7fafc;}
+  .ti-check .head{color:#718096;font-size:.88em;margin-bottom:8px;}
+  .ti-check .row{display:flex;gap:12px;align-items:baseline;margin-bottom:4px;}
+  .ti-check .row:last-child{margin-bottom:0;padding-top:6px;border-top:2px solid #e2e8f0;}
+  .ti-check .t{color:#a0aec0;min-width:88px;font-size:.85em;}
+  .ti-check .v{color:#1a202c;}
+  .ti-check .v.empty{color:#cbd5e0;}
+  .ti-feedback{margin-top:14px;min-height:1.2em;}
+  .ti-feedback .ok{color:#2f855a;}
+  .ti-feedback .note{color:#718096;}
+  .ti-after{margin-top:14px;padding-top:12px;border-top:2px solid #e2e8f0;display:flex;gap:12px;align-items:center;
+    flex-wrap:wrap;color:#718096;}
+  .ti-ghost{background:#edf2f7;color:#2d3748;padding:8px 16px;font-size:.95em;}
+  .ti-ghost:hover{background:#e2e8f0;}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="wrap">
-    <div class="nav-tabs" id="navTabs">
-      <button class="tab-btn active" data-mode="addsub">Add &amp; Subtract</button>
-      <button class="tab-btn" data-mode="muldiv">Multiply &amp; Divide</button>
-      <button class="tab-btn" data-mode="frac">Fraction Coefficients</button>
-      <button class="tab-btn" data-mode="mixed">Mixed</button>
-    </div>
-
-    <div class="top">
-      <h1>One-step equations</h1>
-      <div class="levels" id="levels"></div>
+    <div class="drillhead">
+      <span class="dh-name">One-Step Equations &middot; Add, Subtract, Multiply &amp; Divide</span>
+      <span class="dh-right"><span class="dh-count" id="problem-title">Problem 1 of 40</span><button class="turnin-link" id="turnin-link" type="button">Turn in</button></span>
     </div>
 
     <div class="work">
-      <div class="scroller"><div class="eq" id="eq"></div></div>
-      <div id="panel"></div>
+      <div class="fitbox" id="fitbox">
+        <div class="scroller"><div class="eq" id="eq"></div></div>
+        <div id="panel"></div>
+        <div class="actions"><div class="checkrow" id="checkrow"></div><div class="notebar" id="notebar" aria-live="polite"></div></div>
+      </div>
     </div>
 
     <div class="promptbar" id="promptbar"></div>
   </div>
 </div>
 
+<!-- the turn-in page: name after problem 20, results again after 40, or any time from the Turn in button -->
+<div class="turnin off" id="turnin" role="dialog" aria-labelledby="ti-title">
+  <div class="ti-inner">
+   <div class="ti-col">
+    <h2 id="ti-title">All done</h2>
+    <p class="ti-sub" id="ti-sub">Enter your period and name to turn in your work.</p>
+
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none"
+            onload="if(window.onHiddenFrameLoad)onHiddenFrameLoad()"></iframe>
+
+    <form action="https://docs.google.com/forms/d/e/1FAIpQLSe4_Gnrq1zyrttA3lSgrVBtMkaVaoMim31ByzoH-orxmfDB2A/formResponse"
+          method="POST" target="hidden_iframe" id="gform">
+      <div class="ti-field">
+        <label for="studentPeriod"><span class="ti-num">1</span>Period</label>
+        <input type="number" id="studentPeriod" placeholder="e.g. 3" min="1" max="10" autocomplete="off" required>
+      </div>
+      <div class="ti-field">
+        <label for="lastName"><span class="ti-num">2</span>LAST name
+          <em>&mdash; your family name, the one the roster is alphabetized by</em></label>
+        <input type="text" id="lastName" placeholder="Rodriguez" autocomplete="off" required>
+      </div>
+      <div class="ti-field">
+        <label for="firstName"><span class="ti-num">3</span>FIRST name
+          <em>&mdash; the name your teacher calls you by</em></label>
+        <input type="text" id="firstName" placeholder="Maria" autocomplete="off" required>
+      </div>
+      <div class="ti-check" id="nameCheck"></div>
+      <input type="hidden" id="studentName" name="entry.1899284808" value="">
+      <input type="hidden" id="formScore" name="entry.1974610095" value="">
+      <button type="submit" class="check-btn" id="ti-submit">Submit Results</button>
+    </form>
+
+    <div class="ti-feedback" id="ti-feedback"></div>
+    <div class="ti-after" id="ti-after">
+      <span id="ti-after-lab">Want more practice?</span>
+      <button class="ti-ghost" type="button" id="ti-back">Keep practicing</button>
+    </div>
+   </div>
+   <div class="ti-col">
+    <h3>Your work</h3>
+    <div class="ti-recap" id="ti-recap"></div>
+    <div class="ti-skills" id="ti-skills"></div>
+    <div id="ti-extra"></div>
+    <div id="ti-log"></div>
+   </div>
+  </div>
+</div>
+
 <script>
 
-/* ============ shell: one score, tabs state, router ============ */
+/* ============================================================
+   SETTINGS — the only part you should need to change
+   ============================================================ */
+const SETTINGS = {
+  /* the scored set: how many of each kind, shuffled together.
+     add = x + 7 = 12     sub = x − 7 = 12     mul = 5x = 35     div = x/5 = 7
+     frac = a fraction times the variable, like (2/3)x = 8      */
+  counted: { add: 10, sub: 10, mul: 10, div: 10, frac: 0 },
+  /* the kinds that come up in extra practice after the scored set (hints are on there) */
+  extra: ["add", "sub", "mul", "div", "frac"],
+  /* after this many problems the student enters their name and the work so far is sent;
+     at the end everything is sent again automatically under the same name */
+  askAt: 20
+};
+const DRILL_NAME = "One-Step Equations: Add, Subtract, Multiply & Divide";
+const GOAL = Object.keys(SETTINGS.counted).reduce(function(s,k){ return s + SETTINGS.counted[k]; }, 0);
+const KIND_LABEL = { add:"Addition", sub:"Subtraction", mul:"Multiplication", div:"Division",
+                     frac:"Fractions", addsub:"Add/Sub", muldiv:"Mul/Div" };
+/* which drill engine draws each kind (addsub/muldiv on their own = either flavour, at random) */
+const KIND_ENGINE = { add:"addsub", sub:"addsub", mul:"muldiv", div:"muldiv",
+                      addsub:"addsub", muldiv:"muldiv", frac:"frac" };
+const variantOf = function(k){ return ["add","sub","mul","div"].indexOf(k)>=0 ? k : null; };
+const byId = function(id){ return document.getElementById(id); };
+const escHtml = function(t){ return String(t).replace(/[&<>"]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); };
+
+
+/* ============ shell: shared buttons, dealing, misses, the walk-through ============ */
 const Shell = {
-  done:0, streak:0, active:null, mode:"addsub", engines:{}, timers:[], recent:[],
-  counts:{addsub:0, muldiv:0, frac:0},
+  active:null, kind:null, locked:false, demo:null, current:null,
+  bag:[], recent:[], pendingLevel:null, engines:{}, timers:[], noteTimer:null,
 
   later:function(ms,fn){ Shell.timers.push(setTimeout(fn,ms)); },
   clearTimers:function(){ Shell.timers.forEach(clearTimeout); Shell.timers=[]; },
 
-  /* every drill paints the same header and tags the grid so its own layout applies */
-  head:function(key){
-    document.getElementById("eq").className = "eq k-"+key;
-    const c=Shell.counts;
-    const tab=function(k,label,title){
-      return '<span class="'+(key===k?"on":"")+'" title="'+title+'">'+label
-           + ' <b>'+c[k]+'</b></span>';
-    };
-    document.getElementById("levels").innerHTML =
-      '<span class="score">'+Shell.done+' solved &middot; <b>'+Shell.streak+'</b> in a row</span>'
-      + '<span class="tally">'
-      + tab("addsub","+ &minus;","Add &amp; subtract")
-      + tab("muldiv","&times; &divide;","Multiply &amp; divide")
-      + tab("frac","a/b","Fraction coefficients")
-      + '</span>';
-  },
-  solved:function(clean){
-    Shell.done++;
-    Shell.streak = clean ? Shell.streak+1 : 0;
-    if(Shell.active && Shell.counts[Shell.active]!==undefined) Shell.counts[Shell.active]++;
-  },
+  /* every drill tags the grid so its own layout applies */
+  head:function(key){ byId("eq").className = "eq k-"+key; },
 
   /* the same four moves on every problem: press one, then type the number */
   OPS:[
-    ["opPlus", "add",      "+",         "Add to both sides"],
-    ["opMinus","sub",      "\u2212",    "Subtract from both sides"],
-    ["opMul",  "multiply", "(\u2009)",  "Multiply both sides"],
-    ["opDiv",  "divide",   "\u00f7",    "Divide both sides"]
+    /* id, move, symbol, label, letter shown on the button, every key that presses it */
+    ["opPlus", "add",      "+",         "Add to both sides",        "a", ["a","+"]],
+    ["opMinus","sub",      "−",    "Subtract from both sides", "s", ["s","-","−"]],
+    ["opMul",  "multiply", "( )",  "Multiply both sides",      "m", ["m","x","*"]],
+    ["opDiv",  "divide",   "÷",    "Divide both sides",        "d", ["d","/"]]
   ],
   opsHTML:function(){
     return '<div class="ops">'+Shell.OPS.map(function(o){
-      return '<button class="op" id="'+o[0]+'" aria-label="'+o[3]+'" title="'+o[3]+'">'+o[2]+'</button>';
+      return '<button class="op" id="'+o[0]+'" type="button" aria-label="'+o[3]+' ('+o[4].toUpperCase()+')" title="'+o[3]
+        +' — press '+o[5].map(function(k){ return k.toUpperCase(); }).join(" or ")+'">'
+        +'<span class="key">'+o[4].toUpperCase()+'</span>'+o[2]+'</button>';
     }).join("")+'</div>';
   },
   bindOps:function(fn){
     Shell.OPS.forEach(function(o){
-      const b=document.getElementById(o[0]);
+      const b=byId(o[0]);
       if(b) b.onclick=function(){ fn(o[1],b); };
     });
   },
   shake:function(btn){
     if(!btn) return;
     btn.classList.add("shake");
-    Shell.later(340,function(){ btn.classList.remove("shake"); });
+    setTimeout(function(){ btn.classList.remove("shake"); },340);
   },
 
-  /* don't let one kind of problem come up three times running in mixed mode */
-  pickKind:function(){
-    if(Shell.mode !== "mixed") return Shell.mode;
-    let pool=["addsub","muldiv","frac"];
-    if(Shell.recent.length>1 && Shell.recent[0]===Shell.recent[1]){
-      pool=pool.filter(function(k){return k!==Shell.recent[0];});
+  /* wrap a piece of the equation so it can be clicked (target step), or shown as the one picked */
+  mark:function(phase,html,id,want){
+    if(phase==="target") return '<span class="tgt" role="button" tabindex="0" data-t="'+id+'">'+html+'</span>';
+    if(phase==="pick") return '<span class="tgt'+(id===want?" picked":"")+'">'+html+'</span>';
+    return html;
+  },
+  bindTargets:function(fn){
+    document.querySelectorAll('#eq .tgt[role=button]').forEach(function(t){
+      const go=function(){ fn(t.getAttribute("data-t"),t); };
+      t.onclick=go;
+      t.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
+    });
+  },
+  targetMiss:function(id,V){
+    return id==="v"
+      ? "That's "+V+" — that's what we want to keep. We needed to get rid of the number with "+V+"."
+      : "That number is already by itself on the other side. We needed to get rid of the number with "+V+".";
+  },
+
+  /* hints only in extra practice, so they never touch the score */
+  hintBtn:function(){
+    return (TI.served > GOAL && !Shell.locked) ? '<button class="link" id="hintBtn" type="button">Hint</button>' : '';
+  },
+  /* a gentle note under the work: not a mistake, just "type it this way" */
+  note:function(msg){
+    const n=byId("notebar"); if(!n) return;
+    n.textContent=msg||"";
+    clearTimeout(Shell.noteTimer);
+    if(msg) Shell.noteTimer=setTimeout(function(){ n.textContent=""; },3200);
+  },
+  /* an answer box left empty: point at it instead of judging */
+  askFor:function(id,quiet){
+    const el=byId(id); if(el) el.focus();
+    if(!quiet) Shell.note("Type your answer first.");
+  },
+  /* true while what's typed is empty or could still become one of the right answers
+     ("1" on the way to "12", "-" on the way to "-5"); false once it can't */
+  couldBe:function(raw, forms){
+    const norm=function(t){
+      return String(t).toLowerCase().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g," ")
+        .replace(/^ /,"").replace(/^\+/,"").replace(/^- /,"-");
+    };
+    const t=norm(raw);
+    if(!t || t==="-") return true;
+    return forms.some(function(f){ return norm(f).indexOf(t)===0; });
+  },
+  markOK:function(ids){ ids.forEach(function(id){ const b=byId(id); if(b) b.classList.add("ok"); }); },
+
+  started:function(engine,level,p){
+    if(KIND_ENGINE[Shell.kind]!==engine) Shell.kind=engine;
+    Shell.current={kind:Shell.kind, engine:engine, level:(level===undefined?null:level), p:p};
+  },
+  solved:function(clean,info){ TI.record(clean,info,Shell.kind||Shell.active); },
+
+  /* any mistake ends the problem: it is recorded as missed, then the rest is worked out for them */
+  missed:function(msg,info){
+    if(Shell.locked) return;
+    const eng=Shell.engines[Shell.active];
+    Shell.clearTimers();
+    Shell.solved(false,info);
+    Shell.locked=true;
+    Shell.demo={msg:msg, ans:(info&&info.a)||"", done:false};
+    Shell.requeue(Shell.kind||Shell.active, Shell.current ? Shell.current.level : null);
+    eng.demoMode();
+    eng.rerender();
+    Shell.later(Shell.DEMO_START,function(){ Shell.runDemo(eng); });
+  },
+  /* step through the solution: fill in the current step, pause, move on, until the check is done */
+  /* walk-through speed: the pause before it starts, and how much every step's pause is scaled
+     (1 = the original pace; smaller is quicker) */
+  DEMO_START:900, DEMO_PACE:0.55,
+  runDemo:function(eng){
+    let filled=false;
+    const tick=function(){
+      if(!Shell.demo || Shell.engines[Shell.active]!==eng) return;
+      if(!filled && eng.fill()){ filled=true; Shell.later(Math.round(1300*Shell.DEMO_PACE),tick); return; }
+      filled=false;
+      const wait=eng.advance();
+      if(wait) Shell.later(Math.round(wait*Shell.DEMO_PACE),tick);
+    };
+    tick();
+  },
+
+  /* make the whole problem fit the screen: no scroll bars, ever. The work area is zoomed down
+     (never up) just enough for the tallest/widest step to fit in the space above the prompt. */
+  fit:function(){
+    const box=byId("fitbox"), work=document.querySelector(".work");
+    if(!box || !work) return;
+    box.style.zoom="1";
+    const cs=getComputedStyle(work);
+    const availH=work.clientHeight-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0);
+    const availW=work.clientWidth;
+    const eq=byId("eq");
+    const needH=box.scrollHeight, needW=Math.max(box.scrollWidth, eq ? eq.scrollWidth : 0);
+    if(!needH || !needW) return;
+    const k=Math.max(0.3, Math.min(1, availH/needH, availW/needW));
+    if(k<0.999) box.style.zoom=String(Math.floor(k*1000)/1000);
+  },
+
+  /* step 2: name the operation, then ask for its inverse. The blank fills in when they pick it. */
+  OPWORD:{add:"ADDITION", sub:"SUBTRACTION", mul:"MULTIPLICATION", div:"DIVISION"},
+  pickPrompt:function(op,inv){
+    const W=Shell.OPWORD, filled=!!Shell.demo;
+    return '<span>This is '+(op==="add"?"an":"a")+' <strong>'+W[op]+'</strong> problem. '
+      + 'We need to do the <strong>opposite</strong>, or <strong>inverse</strong>, of <strong>'+W[op]+'</strong>, which is '
+      + '<span class="blank'+(filled?' filled':'')+'" data-word="'+W[inv]+'">'+(filled?W[inv]:'')+'</span>.</span>'
+      + '<span class="faint keys">Click a button, or press A or +, S or \u2212, M or x, D or /.</span>';
+  },
+  /* right button: fill in the blank, light the button, then move on */
+  fillBlank:function(btn,then){
+    const b=document.querySelector("#promptbar .blank");
+    if(b){ b.textContent=b.getAttribute("data-word"); b.classList.add("filled"); }
+    if(btn) btn.classList.add("right");
+    const hb=byId("hintBtn"); if(hb) hb.remove();
+    document.querySelectorAll("#panel .op").forEach(function(o){ o.disabled=true; });
+    Shell.later(750,then);
+  },
+
+  /* the check, three lines: the original equation, the same equation with the answer put in,
+     then that side worked out (a box to type in, or the result with a tick once it's done) */
+  checkHTML:function(o){
+    const eq=' <span class="eqsign">=</span> ';
+    const L=function(v,n){ return o.varLeft ? v+eq+n : n+eq+v; };
+    const last = o.done ? '<span class="green">'+o.C+'</span>' : o.box;
+    return '<div class="checkline">'
+      + '<div class="cl-orig">'+L(o.orig,o.C)+'</div>'
+      + '<div class="cl-sub">'+L(o.done ? o.subbed : '<span class="chk-hl">'+o.subbed+'</span>', o.C)+'</div>'
+      + '<div class="cl-res">'+L(last,o.C)+(o.done?' <span class="green">&#10003;</span>':'')+'</div>'
+      + '</div>';
+  },
+
+  /* after every render: the Check button, or (during a walk-through) the banner and locked controls */
+  afterRender:function(){
+    const eng=Shell.engines[Shell.active];
+    const row=byId("checkrow");
+    if(Shell.demo){
+      document.querySelectorAll("#eq input, #panel input").forEach(function(i){ i.disabled=true; });
+      document.querySelectorAll("#panel .op").forEach(function(b){ b.disabled=true; });
+      document.querySelectorAll("#eq .tgt[role=button]").forEach(function(t){
+        t.removeAttribute("role"); t.removeAttribute("tabindex"); t.onclick=null; t.onkeydown=null;
+      });
+      const hb=byId("hintBtn"); if(hb) hb.remove();
+      if(eng.phase()==="pick"){
+        const want=eng.wantOp();
+        Shell.OPS.forEach(function(o){ if(o[1]===want){ const b=byId(o[0]); if(b) b.classList.add("right"); } });
+      }
+      const pb=byId("promptbar");
+      const ban=document.createElement("div");
+      ban.className="demoban";
+      ban.innerHTML='<div class="missline">'+Shell.demo.msg+'</div>'
+        +'<div class="missed-ans">This one counts as missed'
+        +(Shell.demo.ans?' — the answer is <strong>'+escHtml(Shell.demo.ans)+'</strong>':'')+'.'
+        +(Shell.demo.done?'':' Watch how it goes.')+'</div>';
+      pb.insertBefore(ban,pb.firstChild);
+      row.innerHTML="";
+      if(Shell.demo.done){ const nb=byId("nextBtn"); if(nb) setTimeout(function(){ nb.focus(); },30); }
+      Shell.fit();
+      return;
     }
-    const k=pool[Math.floor(Math.random()*pool.length)];
-    Shell.recent.unshift(k); Shell.recent=Shell.recent.slice(0,2);
+    row.innerHTML="";
+    Shell.fit();
+  },
+
+  /* deal a shuffled set; never three of one kind in a row, including across the join with the last set */
+  deal:function(extra){
+    const comp={};
+    const ok=function(k){ return KIND_ENGINE[k] && Shell.engines[KIND_ENGINE[k]]; };
+    if(extra) SETTINGS.extra.forEach(function(k){ if(ok(k)) comp[k]=3; });
+    else Object.keys(SETTINGS.counted).forEach(function(k){ if(SETTINGS.counted[k]>0 && ok(k)) comp[k]=SETTINGS.counted[k]; });
+    /* build the order one problem at a time: never a third of the same kind in a row, and never
+       leave so many of one kind for the end that a run of three can't be avoided */
+    const kinds=Object.keys(comp), total=kinds.reduce(function(t,k){ return t+comp[k]; },0);
+    const feasible=function(cnt){
+      return kinds.every(function(k){
+        const others=kinds.reduce(function(t,j){ return j===k ? t : t+cnt[j]; },0);
+        return cnt[k] <= 2*(others+1);
+      });
+    };
+    for(let tries=0; tries<200; tries++){
+      const cnt={}; kinds.forEach(function(k){ cnt[k]=comp[k]; });
+      const seq=[], ctx=Shell.recent.slice();
+      while(seq.length<total){
+        const all=ctx.concat(seq), n=all.length;
+        const cands=kinds.filter(function(k){
+          if(!cnt[k]) return false;
+          if(n>=2 && all[n-1]===k && all[n-2]===k) return false;
+          cnt[k]--; const ok=feasible(cnt); cnt[k]++;
+          return ok;
+        });
+        if(!cands.length) break;
+        let r=Math.random()*cands.reduce(function(t,k){ return t+cnt[k]; },0), pick=cands[0];
+        for(let i=0;i<cands.length;i++){ r-=cnt[cands[i]]; if(r<0){ pick=cands[i]; break; } }
+        seq.push(pick); cnt[pick]--;
+      }
+      if(seq.length===total) return seq.reverse();      /* the bag is served from the end */
+    }
+    const b=[]; kinds.forEach(function(k){ for(let i=0;i<comp[k];i++) b.push(k); });
+    return b;
+  },
+  runsOK:function(b){
+    const seq=Shell.recent.concat(b.slice().reverse());   /* the order they'll be served in */
+    for(let i=2;i<seq.length;i++) if(seq[i]===seq[i-1] && seq[i]===seq[i-2]) return false;
+    return true;
+  },
+  pickKind:function(){
+    if(!Shell.bag.length) Shell.bag=Shell.deal(TI.served > GOAL);
+    const k=Shell.bag.pop();
+    Shell.recent.push(k); if(Shell.recent.length>2) Shell.recent.shift();
     return k;
+  },
+  /* a missed skill comes back soon: the next problem of that kind is moved up to 2-3 problems away */
+  requeue:function(kind,level){
+    if(KIND_ENGINE[kind]==="addsub" && level!==null && level!==undefined) Shell.pendingLevel=level;
+    const b=Shell.bag;
+    let idx=-1;
+    for(let i=b.length-1;i>=0;i--) if(b[i]===kind){ idx=i; break; }
+    if(idx<0 || b.length-1-idx<=3) return;               /* none left, or already coming up soon */
+    const item=b.splice(idx,1)[0];
+    const gaps=[2,3,1];
+    for(let g=0;g<gaps.length;g++){
+      const pos=b.length-gaps[g];
+      if(pos<0) continue;
+      const t=b.slice(); t.splice(pos,0,item);
+      if(Shell.runsOK(t)){ Shell.bag=t; return; }
+    }
+    b.splice(idx,0,item);
   },
   /* add & subtract keeps its three flavours; whole numbers come up most often */
   pickLevel:function(){
+    if(Shell.pendingLevel!==null && Shell.pendingLevel!==undefined){
+      const l=Shell.pendingLevel; Shell.pendingLevel=null; return l;
+    }
     const r=Math.random();
     return r<0.6 ? 0 : (r<0.8 ? 1 : 2);
   },
+  nextLabel:function(){ return TI.nextLabel(); },
 
   next:function(){
+    if(TI.isOpen()) return;
+    if(TI.wantsTurnIn()) return;                 /* it opens the turn-in page itself when needed */
     Shell.clearTimers();
-    document.getElementById("panel").innerHTML="";
-    const k=Shell.pickKind();
-    Shell.active=k;
-    Shell.engines[k].start(k==="addsub" ? Shell.pickLevel() : undefined);
-  },
-
-  setTab:function(mode){
-    if(Shell.mode === mode) return;
-    Shell.mode = mode;
-    document.querySelectorAll(".tab-btn").forEach(function(btn){
-      btn.classList.toggle("active", btn.getAttribute("data-mode") === mode);
-    });
-    Shell.next();
+    Shell.locked=false; Shell.demo=null;
+    Shell.note("");
+    TI.newProblem();
+    byId("panel").innerHTML="";
+    const k=Shell.pickKind(), e=KIND_ENGINE[k];
+    Shell.kind=k; Shell.active=e;
+    Shell.engines[e].start(e==="addsub" ? Shell.pickLevel() : undefined, null, variantOf(k));
   }
 };
 
-/* Attach tab listeners */
-document.querySelectorAll(".tab-btn").forEach(function(btn){
-  btn.onclick = function(){ Shell.setTab(btn.getAttribute("data-mode")); };
+/* keyboard: A/+ S/- M/x D/ for the moves; Enter moves on once a missed problem has been worked through */
+document.addEventListener("keydown",function(e){
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(TI.isOpen()) return;
+  if(Shell.locked){
+    if(e.key==="Enter"){ e.preventDefault(); if(Shell.demo && Shell.demo.done) Shell.next(); }
+    return;
+  }
+  if(e.defaultPrevented) return;
+  const a=document.activeElement;
+  if(a && (a.tagName==="INPUT" || a.tagName==="TEXTAREA")) return;
+  const k=e.key.toLowerCase();
+  const o=Shell.OPS.filter(function(x){ return x[5].indexOf(k)>=0; })[0];
+  if(!o) return;
+  const b=byId(o[0]);
+  if(b && !b.disabled){ e.preventDefault(); b.click(); }
 });
+
 
 /* ================= addsub ================= */
 Shell.engines["addsub"] = (function(){
@@ -338,7 +739,7 @@ function same(x,y){return x.n*y.d===y.n*x.d;}
 function numOf(x){return x.n/x.d;}
 
 /* ============ formatting ============ */
-const MINUS="\u2212";
+const MINUS="−";
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function dash(s){return String(s).replace(/-/g,MINUS);}
 function decText(r){
@@ -366,7 +767,7 @@ function overSignedHTML(n,d){
 /* ============ parsing ============ */
 function parseParts(raw){
   if(raw===null||raw===undefined) return null;
-  let s=String(raw).trim().toLowerCase().replace(/[\u2212\u2013\u2014]/g,"-");
+  let s=String(raw).trim().toLowerCase().replace(/[−–—]/g,"-");
   s=s.replace(/^add\b/,"+").replace(/^plus\b/,"+").replace(/^(subtract|minus|take away)\b/,"-");
   s=s.replace(/\s+/g," ").trim().replace(/^([+-])\s+/,"$1");
   let m;
@@ -431,12 +832,23 @@ function genProblem(level){
   };
 }
 
+/* adding: x + 7, 7 + x, −x + 7.   subtracting: x − 7, −x − 7 (the minus is always visible) */
+function fits(p,v){
+  if(v==="add") return p.a.n>0 && (p.varFirst || !p.negVar);
+  if(v==="sub") return p.a.n<0 && p.varFirst;
+  return true;
+}
+function genFor(level,v){
+  let p=genProblem(level);
+  for(let i=0;i<600 && !fits(p,v);i++) p=genProblem(level);
+  return p;
+}
+
 /* ============ state ============ */
 const S={
-  level:0, p:genProblem(0), phase:"pick", sign:1,
-  opIn:"", lcdIn:"", e1:"", e2:"", valIn:"", simpIn:"", flipIn:"",
-  rawShown:null, miss:"", hint:false, done:0, streak:0, clean:true,
-  firstId:null
+  level:0, p:null, phase:"target", sign:1,
+  opIn:"", lcdIn:"", e1:"", e2:"", valIn:"", simpIn:"", flipIn:"", chkIn:"",
+  rawShown:null, hint:false, clean:true, firstId:null, demoing:false, busy:false
 };
 const clearTimers=Shell.clearTimers, later=Shell.later;
 
@@ -446,24 +858,36 @@ function isFrac(){return S.level===2;}
 function wideCls(){return S.level!==0?" wide":"";}
 function op(){return neg(S.p.a);}
 function needConvert(){return isFrac() && S.p.C.d!==op().d;}
+function lcdOK(d){return d!==null && d>0 && d%S.p.C.d===0 && d%op().d===0;}
 function commonD(){
-  const chosen=parseWhole(S.lcdIn);
-  const good = chosen && chosen>0 && chosen%S.p.C.d===0 && chosen%op().d===0;
   if(!isFrac()) return 1;
   if(!needConvert()) return S.p.C.d;
-  return good?chosen:lcm(S.p.C.d,op().d);
+  const chosen=parseWhole(S.lcdIn);
+  return lcdOK(chosen)?chosen:lcm(S.p.C.d,op().d);
 }
 function rn1(){return isFrac()? S.p.C.n*(commonD()/S.p.C.d) : 0;}
 function rn2(){return isFrac()? op().n*(commonD()/op().d) : 0;}
 function sumN(){return rn1()+rn2();}
 function e1ok(){const v=parseWhole(S.e1);return v!==null && Math.abs(v)===Math.abs(rn1());}
 function e2ok(){const v=parseWhole(S.e2);return v!==null && Math.abs(v)===Math.abs(rn2());}
-function afterCancel(){return ["lcd","equiv","compute","simplify","flip","solved","check"].indexOf(S.phase)>=0;}
-function rewritten(){return isFrac() && needConvert() && ["compute","simplify","flip","solved","check"].indexOf(S.phase)>=0;}
+function afterCancel(){return ["lcd","equiv","compute","simplify","flip","solved","verify","check"].indexOf(S.phase)>=0;}
+function rewritten(){return isFrac() && needConvert() && ["compute","simplify","flip","solved","verify","check"].indexOf(S.phase)>=0;}
 function varTermText(){
   const V=S.p.V;
   if(S.p.varFirst) return S.p.negVar? MINUS+V : V;
   return S.p.negVar? MINUS+" "+V : "+ "+V;
+}
+/* a value the way a student would type it */
+function inputText(r){
+  if(S.level===1) return decText(r);
+  if(r.d===1) return String(r.n);
+  const w=Math.trunc(Math.abs(r.n)/r.d), rest=Math.abs(r.n)%r.d;
+  return (r.n<0?"-":"")+(w?w+" ":"")+rest+"/"+r.d;
+}
+function fmtNote(){
+  return S.level===2 ? "Type a fraction like 3/4 or -1/2."
+       : S.level===1 ? "Type a number like 2.5 or -0.75."
+       : "Type a whole number, like 7 or -3.";
 }
 
 /* ============ rendering ============ */
@@ -490,12 +914,13 @@ function renderEquation(){
   const opHTML = signedHTML(op(),m);
   const opShownHTML = rewritten() ? overSignedHTML(rn2(),commonD()) : opHTML;
 
-  /* row 1 */
+  /* row 1 — first the student clicks the term that's in the way */
+  const vT=Shell.mark(S.phase,varTermText(),"v","a"), aT=Shell.mark(S.phase,aHTML,"a","a"), cT=Shell.mark(S.phase,cHTML,"c","a");
   const r1={
-    t1: cell(p.varFirst?varTermText():aHTML, p.varFirst?"":strikeCls),
-    t2: cell(p.varFirst?aHTML:varTermText(), p.varFirst?strikeCls:""),
+    t1: cell(p.varFirst?vT:aT, p.varFirst?"":strikeCls),
+    t2: cell(p.varFirst?aT:vT, p.varFirst?strikeCls:""),
     eq: cell("=","eqsign"),
-    bn: cell(cHTML, blueCls)
+    bn: cell(cT, blueCls)
   };
   /* row 2 — the same move on both sides */
   const opLeftId  = "opA", opRightId = "opB";
@@ -543,17 +968,33 @@ function renderEquation(){
 
   const order=function(r){return p.varLeft?[r.t1,r.t2,r.eq,r.bn]:[r.bn,r.eq,r.t1,r.t2];};
   let html = order(r1).join("");
-  if(S.phase!=="pick") html += order(r2).join("");
-  if(S.phase!=="op" && S.phase!=="pick") html += '<div class="rule"></div>';
+  if(S.phase!=="pick" && S.phase!=="target") html += order(r2).join("");
+  if(S.phase!=="op" && S.phase!=="pick" && S.phase!=="target") html += '<div class="rule"></div>';
   if(afterCancel()) html += order(r4).join("");
-  if(p.negVar && ["flip","solved","check"].indexOf(S.phase)>=0) html += order(r5).join("");
-  document.getElementById("eq").innerHTML=html;
+  if(p.negVar && ["flip","solved","verify","check"].indexOf(S.phase)>=0) html += order(r5).join("");
+  byId("eq").innerHTML=html;
 
   if(S.phase==="op") S.firstId = opLeftId;
 }
 
+/* the original equation, and the same thing with the answer put in for the variable */
+function checkParts(){
+  const p=S.p, m=mode();
+  const aHTML = p.varFirst ? signedHTML(p.a,m) : valHTML(p.a,m);
+  const solG = '<span class="green">'+valHTML(p.sol,m)+'</span>';
+  let subVar;
+  if(p.negVar) subVar = (p.varFirst?MINUS:MINUS+" ")+"("+solG+")";
+  else if(p.varFirst) subVar = solG;
+  else subVar = "+ " + (p.sol.n<0 ? "("+solG+")" : solG);
+  return {
+    orig: p.varFirst ? varTermText()+" "+aHTML : aHTML+" "+varTermText(),
+    subbed: p.varFirst ? subVar+" "+aHTML : aHTML+" "+subVar,
+    cHTML: valHTML(p.C,m)
+  };
+}
+
 function renderPanel(){
-  const el=document.getElementById("panel");
+  const el=byId("panel");
   const p=S.p, m=mode(), cd=commonD();
   if(S.phase==="pick"){
     el.innerHTML=Shell.opsHTML();
@@ -566,40 +1007,32 @@ function renderPanel(){
     const sign2 = rn2()<0 ? MINUS : "+";
     el.innerHTML='<div class="panel"><span class="blue">'+valHTML(p.C,m)+' '+signedHTML(op(),m)+'</span>'
       +'<span class="eqsign">=</span>'+sign1
-      +'<span class="fracin">'+boxHTML("e1",S.e1," small"+(e1ok()?" ok":""))+'<span class="bar2"></span><span class="den">'+cd+'</span></span>'
+      +'<span class="fracin">'+boxHTML("e1",S.e1," small")+'<span class="bar2"></span><span class="den">'+cd+'</span></span>'
       +'<span>'+sign2+'</span>'
-      +'<span class="fracin">'+boxHTML("e2",S.e2," small"+(e2ok()?" ok":""))+'<span class="bar2"></span><span class="den">'+cd+'</span></span>'
+      +'<span class="fracin">'+boxHTML("e2",S.e2," small")+'<span class="bar2"></span><span class="den">'+cd+'</span></span>'
       +'</div>';
-    S.firstId = e1ok() ? "e2" : "e1";
-  } else if(S.phase==="check"){
-    const aHTML = p.varFirst ? signedHTML(p.a,m) : valHTML(p.a,m);
-    const solG = '<span class="green">'+valHTML(p.sol,m)+'</span>';
-    let subVar;
-    if(p.negVar) subVar = (p.varFirst?MINUS:MINUS+" ")+"("+solG+")";
-    else if(p.varFirst) subVar = solG;
-    else subVar = "+ " + (p.sol.n<0 ? "("+solG+")" : solG);
-    const orig = p.varFirst ? varTermText()+" "+aHTML : aHTML+" "+varTermText();
-    const subbed = p.varFirst ? subVar+" "+aHTML : aHTML+" "+subVar;
-    const cHTML = valHTML(p.C,m);
-    const origLine = p.varLeft ? orig+' <span class="eqsign">=</span> '+cHTML : cHTML+' <span class="eqsign">=</span> '+orig;
-    const subLine  = p.varLeft
-      ? subbed+' <span class="eqsign">=</span> '+cHTML+' <span class="green">&#10003;</span>'
-      : cHTML+' <span class="eqsign">=</span> '+subbed+' <span class="green">&#10003;</span>';
-    el.innerHTML='<div class="checkline"><div class="orig">'+origLine+'</div><div class="sub">'+subLine+'</div></div>';
+    S.firstId = "e1";
+  } else if(S.phase==="verify" || S.phase==="check"){
+    const c=checkParts();
+    el.innerHTML=Shell.checkHTML({varLeft:p.varLeft, orig:c.orig, subbed:c.subbed, C:c.cHTML,
+      box:boxHTML("chk",S.chkIn,"")+(isFrac()?previewHTML("chk"):""), done:S.phase==="check"});
   } else {
     el.innerHTML="";
   }
 }
 
 function renderPrompt(){
-  const el=document.getElementById("promptbar");
+  const el=byId("promptbar");
   const p=S.p, m=mode(), V=p.V, cd=commonD();
   const negV = MINUS+V;
-  const hintBtn='<button class="link" id="hintBtn">'+(S.hint?"Hide hint":"Hint")+'</button>';
+  const hintBtn=Shell.hintBtn();
   let h="";
 
-  if(S.phase==="pick"){
-    h='<div class="prompt"><span>What do you do to <strong>both sides</strong> to get '+(p.negVar?negV:V)+' by itself?</span>'+hintBtn;
+  if(S.phase==="target"){
+    h='<div class="prompt"><span>Click on what we need to <strong>get rid of</strong>.</span></div>';
+  }
+  else if(S.phase==="pick"){
+    h='<div class="prompt">'+Shell.pickPrompt((op().n<0?"add":"sub"), (op().n<0?"sub":"add"))+hintBtn;
     if(S.hint) h+='<div class="hintline"><span class="math">'+valHTML(p.a,m)+'</span>'
       +'<span>is in the way, and it is being '+(p.a.n<0?"subtracted":"added")+'. '
       +'Do the opposite &mdash; press '+(op().n<0?MINUS:"+")+'.</span></div>';
@@ -659,20 +1092,25 @@ function renderPrompt(){
   else if(S.phase==="solved"){
     h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
   }
+  else if(S.phase==="verify"){
+    h='<div class="prompt"><span>Check it: put</span><span class="math">'+valHTML(p.sol,m)
+      +'</span><span>in for '+V+'. Work out that side &mdash; what does it come out to?</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>Work out that side. If '+V+' is right, you get</span>'
+      +'<span class="math">'+valHTML(p.C,m)+'</span><span>&mdash; the same as the other side.</span></div>';
+    h+='</div>';
+  }
   else if(S.phase==="check"){
     h='<div class="row-between"><div class="prompt"><span>Put</span><span class="math">'+valHTML(p.sol,m)
       +'</span><span>back in for '+V+' and both sides match.</span></div>'
-      +'<button class="next" id="nextBtn">Next problem &rarr;</button></div>';
+      +'<button class="next" id="nextBtn" type="button">'+Shell.nextLabel()+'</button></div>';
   }
-  if(S.miss) h+='<div class="missline">'+S.miss+'</div>';
-  if(S.phase!=="check") h+='<div><button class="link skip" id="skipBtn">Skip</button></div>';
   el.innerHTML=h;
 }
 
 function updatePreview(id){
-  const pv=document.getElementById(id+"-pv");
+  const pv=byId(id+"-pv");
   if(!pv) return;
-  const box=document.getElementById(id);
+  const box=byId(id);
   const parts=parseParts(box?box.value:"");
   pv.innerHTML = (parts && parts.d!==1) ? overHTML(parts.n,parts.d) : "";
 }
@@ -683,172 +1121,312 @@ function render(){
   renderPanel();
   renderPrompt();
   attach();
-  ["opA","opB","ans","simp","flip"].forEach(updatePreview);
+  ["opA","opB","ans","simp","flip","chk"].forEach(updatePreview);
+  Shell.afterRender();
   focusFirst();
 }
 function focusFirst(){
+  if(Shell.demo) return;
   later(60,function(){
-    const el = S.firstId && document.getElementById(S.firstId);
-    if(el && !el.readOnly) el.focus();
+    const el = S.firstId && byId(S.firstId);
+    if(el && !el.disabled) el.focus();
   });
 }
 
 /* ============ flow ============ */
 function setPhase(ph){
   clearTimers();
-  S.phase=ph; S.miss="";
+  S.busy=false;
+  S.phase=ph;
   if(ph==="compute") S.firstId="ans";
   else if(ph==="simplify") S.firstId="simp";
   else if(ph==="flip") S.firstId="flip";
-  else if(ph==="pick") S.firstId=null;
+  else if(ph==="verify") S.firstId="chk";
+  else if(ph==="pick"||ph==="target"||ph==="check") S.firstId=null;
   render();
+  if(S.demoing) return;
   if(ph==="cancel") later(1600,function(){ setPhase(needConvert()?"lcd":"compute"); });
-  if(ph==="solved") later(850,function(){ setPhase("check"); });
+  if(ph==="solved") later(850,function(){ setPhase("verify"); });
 }
+function txtR(r){
+  if(S.level===1) return dash(decText(r));
+  if(r.d===1) return dash(String(r.n));
+  const w=Math.trunc(Math.abs(r.n)/r.d), rest=Math.abs(r.n)%r.d;
+  return (r.n<0?MINUS:"")+(w?w+" ":"")+rest+"/"+r.d;
+}
+function describe(){
+  const p=S.p, V=p.V;
+  const left = p.varFirst
+    ? (p.negVar?MINUS:"")+V+" "+(p.a.n<0?MINUS:"+")+" "+txtR(absR(p.a))
+    : txtR(p.a)+" "+(p.negVar?MINUS:"+")+" "+V;
+  return {q: p.varLeft ? left+" = "+txtR(p.C) : txtR(p.C)+" = "+left, a: V+" = "+txtR(p.sol)};
+}
+/* only a correct check finishes the problem cleanly */
 function finish(){
-  Shell.solved(S.clean);
-  setPhase("solved");
+  Shell.solved(S.clean, describe());
+  setPhase("check");
 }
 function flagMiss(msg){
-  S.clean=false; S.miss=msg; renderPrompt(); attach();
-  later(2600,function(){ S.miss=""; renderPrompt(); attach(); });
+  S.clean=false;
+  Shell.missed(msg, describe());
 }
-function missMessage(){
-  if(S.phase==="op") return "That won't cancel it out \u2014 use the same size number that's in the way.";
-  if(S.phase==="lcd") return S.p.C.d+" and "+op().d+" both have to divide into it evenly.";
-  if(S.phase==="equiv") return "Multiply the top by the same number you multiplied the bottom by.";
-  if(S.phase==="compute") return "Not quite \u2014 check the sign, then try again.";
-  if(S.phase==="simplify") return "Divide the top and the bottom by the same number.";
-  if(S.phase==="flip") return "Flip the sign on both sides.";
-  return "";
+function accept(ids,ms,fn){ S.busy=true; Shell.markOK(ids); later(ms,fn); }
+
+/* Enter (or the Check button): judge what is in the boxes for this step */
+function submit(fromId,auto){
+  if(Shell.locked || S.busy || S.demoing) return;
+  /* auto = called while typing: a right answer moves on, anything else waits for Enter */
+  const ask=function(id,q){ if(!auto) Shell.askFor(id,q); },
+        note=function(m){ if(!auto) Shell.note(m); },
+        miss=function(m){ if(!auto) flagMiss(m); };
+  const p=S.p, ph=S.phase;
+  if(ph==="op"){
+    if(!S.opIn.trim()) return ask("opA");
+    const v=parseRat(S.opIn);
+    if(!v) return note(fmtNote());
+    if(same(absR(v),absR(op()))) return accept(["opA","opB"],250,function(){ S.hint=false; setPhase("cancel"); });
+    return miss("That won't cancel it out — it takes the same size number that's in the way.");
+  }
+  if(ph==="lcd"){
+    if(!S.lcdIn.trim()) return ask("lcd");
+    const d=parseWhole(S.lcdIn);
+    if(d===null) return note("Type a whole number.");
+    if(lcdOK(d)) return accept(["lcd"],250,function(){ setPhase("equiv"); });
+    return miss(p.C.d+" and "+op().d+" both have to divide into it evenly.");
+  }
+  if(ph==="equiv"){
+    if(!S.e1.trim()) return ask("e1");
+    if(!S.e2.trim()){
+      if(auto){ if(fromId==="e1" && e1ok()) byId("e2").focus(); return; }
+      return Shell.askFor("e2", fromId==="e1");
+    }
+    if(parseWhole(S.e1)===null || parseWhole(S.e2)===null) return note("Type whole numbers on top.");
+    if(e1ok() && e2ok()) return accept(["e1","e2"],450,function(){ S.hint=false; setPhase("compute"); });
+    return miss("Multiply each top number by the same number you multiplied its bottom number by.");
+  }
+  if(ph==="compute"){
+    if(!S.valIn.trim()) return ask("ans");
+    const parts=parseParts(S.valIn);
+    if(!parts) return note(fmtNote());
+    if(!same(R(parts.n,parts.d),p.T)) return miss("Not quite — that's not what the blue side adds up to.");
+    const simplest = parts.n===p.T.n && parts.d===p.T.d;
+    return accept(["ans"],250,function(){
+      S.hint=false;
+      if(isFrac() && !simplest){ S.rawShown={n:parts.n,d:parts.d}; setPhase("simplify"); }
+      else setPhase(p.negVar?"flip":"solved");
+    });
+  }
+  if(ph==="simplify"){
+    if(!S.simpIn.trim()) return ask("simp");
+    const parts=parseParts(S.simpIn);
+    if(!parts) return note(fmtNote());
+    if(parts.n===p.T.n && parts.d===p.T.d) return accept(["simp"],250,function(){ S.hint=false; setPhase(p.negVar?"flip":"solved"); });
+    return miss("Not quite — divide the top and the bottom by the biggest number that goes into both.");
+  }
+  if(ph==="flip"){
+    if(!S.flipIn.trim()) return ask("flip");
+    const v=parseRat(S.flipIn);
+    if(!v) return note(fmtNote());
+    if(same(v,p.sol)) return accept(["flip"],250,function(){ S.hint=false; setPhase("solved"); });
+    return miss("Not quite — multiplying by −1 flips the sign on both sides.");
+  }
+  if(ph==="verify"){
+    if(!S.chkIn.trim()) return ask("chk");
+    const v=parseRat(S.chkIn);
+    if(!v) return note(fmtNote());
+    if(same(v,p.C)) return accept(["chk"],300,finish);
+    return miss("Not quite — work that side out again. It comes out to "+txtR(p.C)+".");
+  }
 }
-function nextProblem(){ Shell.next(); }
-function begin(level){
+
+/* the walk-through after a miss: fill in this step correctly, then move on */
+function fill(){
+  const p=S.p;
+  switch(S.phase){
+    case "op":      S.sign=wantSign()==="sub"?-1:1; S.opIn=inputText(absR(op())); break;
+    case "lcd":     S.lcdIn=String(lcm(p.C.d,op().d)); break;
+    case "equiv":   if(!lcdOK(parseWhole(S.lcdIn))) S.lcdIn=String(lcm(p.C.d,op().d));
+                    S.e1=String(Math.abs(rn1())); S.e2=String(Math.abs(rn2())); break;
+    case "compute": S.valIn=inputText(p.T); break;
+    case "simplify":S.simpIn=inputText(p.T); break;
+    case "flip":    S.flipIn=inputText(p.sol); break;
+    case "verify":  S.chkIn=inputText(p.C); break;
+    default: return false;
+  }
+  /* type into the boxes already on screen, so nothing re-draws */
+  sync({opA:S.opIn, opB:S.opIn, lcd:S.lcdIn, e1:S.e1, e2:S.e2, ans:S.valIn, simp:S.simpIn, flip:S.flipIn, chk:S.chkIn});
+  ["opA","opB","ans","simp","flip","chk"].forEach(updatePreview);
+  return true;
+}
+function sync(vals){ Object.keys(vals).forEach(function(id){ const el=byId(id); if(el) el.value=vals[id]; }); }
+function advance(){
+  const p=S.p;
+  switch(S.phase){
+    case "target":  setPhase("pick"); return 1700;
+    case "pick":    S.sign=wantSign()==="sub"?-1:1; S.opIn=""; setPhase("op"); return 900;
+    case "op":      setPhase("cancel"); return 1800;
+    case "cancel":  setPhase(needConvert()?"lcd":"compute"); return 900;
+    case "lcd":     setPhase("equiv"); return 900;
+    case "equiv":   setPhase("compute"); return 900;
+    case "compute":
+    case "simplify":setPhase(p.negVar?"flip":"solved"); return p.negVar?900:1000;
+    case "flip":    setPhase("solved"); return 1000;
+    case "solved":  setPhase("verify"); return 900;
+    case "verify":  Shell.demo.done=true; setPhase("check"); return 0;
+    default:        if(Shell.demo){ Shell.demo.done=true; render(); } return 0;
+  }
+}
+
+function begin(level,saved,variant){
   clearTimers();
-  S.level=level !== undefined ? level : 0;
-  S.p=genProblem(S.level); S.phase="pick"; S.sign=1;
-  S.opIn=""; S.lcdIn=""; S.e1=""; S.e2=""; S.valIn=""; S.simpIn=""; S.flipIn="";
-  S.rawShown=null; S.hint=false; S.clean=true; S.miss=""; S.firstId=null;
+  S.level=level!==undefined && level!==null ? level : 0;
+  S.p=saved || genFor(S.level,variant); S.phase="target"; S.sign=1;
+  S.opIn=""; S.lcdIn=""; S.e1=""; S.e2=""; S.valIn=""; S.simpIn=""; S.flipIn=""; S.chkIn="";
+  S.rawShown=null; S.hint=false; S.clean=true; S.firstId=null; S.demoing=false; S.busy=false;
+  Shell.started(KEY,S.level,S.p);
   render();
 }
 
 /* ============ input handling ============ */
 function attach(){
-  const hb=document.getElementById("hintBtn");
-  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); };
-  const sb=document.getElementById("skipBtn");
-  if(sb) sb.onclick=nextProblem;
-  const nb=document.getElementById("nextBtn");
-  if(nb) nb.onclick=nextProblem;
+  const hb=byId("hintBtn");
+  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); Shell.fit(); };
+  const nb=byId("nextBtn");
+  if(nb) nb.onclick=function(){ Shell.next(); };
   Shell.bindOps(chooseOp);
+  Shell.bindTargets(chooseTarget);
 
   bind("opA",onOp); bind("opB",onOp);
-  bind("lcd",onLcd);
-  bind("e1",onEquiv); bind("e2",onEquiv);
-  bind("ans",onCompute);
-  bind("simp",onSimplify);
-  bind("flip",onFlip);
+  bind("lcd",function(e){ S.lcdIn=e.target.value; });
+  bind("e1",function(e){ S.e1=e.target.value; }); bind("e2",function(e){ S.e2=e.target.value; });
+  bind("ans",function(e){ S.valIn=e.target.value; updatePreview("ans"); });
+  bind("simp",function(e){ S.simpIn=e.target.value; updatePreview("simp"); });
+  bind("flip",function(e){ S.flipIn=e.target.value; updatePreview("flip"); });
+  bind("chk",function(e){ S.chkIn=e.target.value; updatePreview("chk"); });
 }
 function bind(id,handler){
-  const el=document.getElementById(id);
+  const el=byId(id);
   if(!el) return;
-  el.oninput=handler;
-  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); flagMiss(missMessage()); } };
+  el.oninput=function(e){ handler(e); autoCheck(id); };
+  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); submit(id); } };
 }
 
+/* every keystroke: a right answer moves on; if they keep typing after one, re-check what's there now */
+/* every way of writing a value a student might type: 3/4, 6/8, 0.75, .75, 1 1/4 ... */
+function valForms(r){
+  const out=[], n=r.n, d=r.d, sg=n<0?"-":"";
+  if(d===1) out.push(String(n));
+  else {
+    for(let k=1;k<=12;k++) out.push(sg+Math.abs(n)*k+"/"+d*k);
+    const w=Math.trunc(Math.abs(n)/d), rest=Math.abs(n)%d;
+    if(w) out.push(sg+w+" "+rest+"/"+d);
+  }
+  let dd=d; while(dd%2===0) dd/=2; while(dd%5===0) dd/=5;
+  if(dd===1){
+    const t=decText(r); out.push(t);
+    if(/^-?0\./.test(t)) out.push(t.replace("0.","."));
+  }
+  return out;
+}
+function formsFor(id){
+  const p=S.p;
+  switch(id){
+    case "opA": case "opB": return valForms(absR(op())).concat(valForms(neg(absR(op()))));
+    case "lcd": { const L=lcm(p.C.d,op().d), o=[]; for(let k=1;k<=12;k++) o.push(String(L*k)); return o; }
+    case "e1":  return [String(Math.abs(rn1())), String(rn1())];
+    case "e2":  return [String(Math.abs(rn2())), String(rn2())];
+    case "ans": return valForms(p.T).concat(isFrac() ? [(sumN()<0?"-":"")+Math.abs(sumN())+"/"+commonD()] : []);
+    case "simp":return [inputText(p.T)];
+    case "flip":return valForms(p.sol);
+    case "chk": return valForms(p.C);
+  }
+  return null;
+}
+function cantBeRight(id){
+  const el=byId(id), f=formsFor(id);
+  return !!(el && f && !Shell.couldBe(el.value,f));
+}
+function wrongMsg(){
+  const p=S.p;
+  switch(S.phase){
+    case "op":       return "That won't cancel it out \u2014 it takes the same size number that's in the way.";
+    case "lcd":      return p.C.d+" and "+op().d+" both have to divide into it evenly.";
+    case "equiv":    return "Multiply each top number by the same number you multiplied its bottom number by.";
+    case "compute":  return "Not quite \u2014 that's not what the blue side adds up to.";
+    case "simplify": return "Not quite \u2014 divide the top and the bottom by the biggest number that goes into both.";
+    case "flip":     return "Not quite \u2014 multiplying by \u22121 flips the sign on both sides.";
+    case "verify":   return "Not quite \u2014 work that side out again. It comes out to "+txtR(p.C)+".";
+  }
+  return "Not quite.";
+}
+function autoCheck(id){
+  if(Shell.locked || S.demoing) return;
+  if(S.busy){
+    clearTimers(); S.busy=false;
+    document.querySelectorAll("#eq .box.ok, #panel .box.ok").forEach(function(b){ b.classList.remove("ok"); });
+    ["slD","slN"].forEach(function(i){ const sl=byId(i); if(sl && sl.className==="slash draw") sl.className="pend"; });
+  }
+  /* a wrong answer counts the moment it's typed \u2014 no need to press Enter */
+  if(cantBeRight(id)){ flagMiss(wrongMsg()); return; }
+  submit(id,true);
+  Shell.fit();
+}
+function chooseTarget(id,el){
+  if(Shell.locked) return;
+  if(id==="a"){ S.hint=false; setPhase("pick"); return; }
+  Shell.shake(el); flagMiss(Shell.targetMiss(id,S.p.V));
+}
 function chooseOp(kind,btn){
+  if(Shell.locked || S.busy) return;
   if(kind===wantSign()){
     S.sign = kind==="sub" ? -1 : 1;
-    S.opIn=""; S.hint=false; setPhase("op");
+    S.opIn=""; S.hint=false; S.busy=true;
+    Shell.fillBlank(btn,function(){ setPhase("op"); });
     return;
   }
-  S.clean=false;
   Shell.shake(btn);
   if(kind==="add"||kind==="sub"){
-    flagMiss("That moves the wrong way \u2014 it makes that side bigger instead of clearing "
+    flagMiss("That moves the wrong way — it makes that side bigger instead of clearing "
       +(S.p.a.n<0?"the subtraction":"the addition")+".");
   } else {
     flagMiss("Nothing is multiplying or dividing "+S.p.V
-      +" here \u2014 a number is being "+(S.p.a.n<0?"subtracted":"added")+", so undo it the same way.");
+      +" here — a number is being "+(S.p.a.n<0?"subtracted":"added")+", so undo it the same way.");
   }
 }
-
 function onOp(e){
   S.opIn=e.target.value;
-  const other = e.target.id==="opA" ? document.getElementById("opB") : document.getElementById("opA");
+  const other = e.target.id==="opA" ? byId("opB") : byId("opA");
   if(other && other.value!==S.opIn) other.value=S.opIn;
   updatePreview("opA"); updatePreview("opB");
-  const v=parseRat(S.opIn);          /* the sign came from the button, so only size matters here */
-  clearTimers();
-  if(v && same(absR(v),absR(op()))) later(250,function(){ S.hint=false; setPhase("cancel"); });
-}
-function onLcd(e){
-  S.lcdIn=e.target.value;
-  const d=parseWhole(S.lcdIn);
-  const ok = d && d>0 && d%S.p.C.d===0 && d%op().d===0;
-  clearTimers();
-  if(ok) later(250,function(){ setPhase("equiv"); });
-}
-function onEquiv(e){
-  if(e.target.id==="e1") S.e1=e.target.value; else S.e2=e.target.value;
-  const b1=document.getElementById("e1"), b2=document.getElementById("e2");
-  if(b1) b1.className="box"+wideCls()+" small"+(e1ok()?" ok":"");
-  if(b2) b2.className="box"+wideCls()+" small"+(e2ok()?" ok":"");
-  clearTimers();
-  if(e.target.id==="e1" && e1ok() && !e2ok() && b2) b2.focus();
-  if(e1ok() && e2ok()) later(450,function(){ S.hint=false; setPhase("compute"); });
-}
-function onCompute(e){
-  S.valIn=e.target.value;
-  updatePreview("ans");
-  const parts=parseParts(S.valIn);
-  clearTimers();
-  if(!parts || !same(R(parts.n,parts.d),S.p.T)) return;
-  const simplest = parts.n===S.p.T.n && parts.d===S.p.T.d;
-  later(250,function(){
-    if(isFrac() && !simplest){ S.rawShown={n:parts.n,d:parts.d}; S.hint=false; setPhase("simplify"); }
-    else if(S.p.negVar){ S.hint=false; setPhase("flip"); }
-    else finish();
-  });
-}
-function onSimplify(e){
-  S.simpIn=e.target.value;
-  updatePreview("simp");
-  const parts=parseParts(S.simpIn);
-  clearTimers();
-  if(parts && parts.n===S.p.T.n && parts.d===S.p.T.d){
-    later(250,function(){ if(S.p.negVar){ S.hint=false; setPhase("flip"); } else finish(); });
-  }
-}
-function onFlip(e){
-  S.flipIn=e.target.value;
-  updatePreview("flip");
-  const v=parseRat(S.flipIn);
-  clearTimers();
-  if(v && same(v,S.p.sol)) later(250,finish);
 }
 
 document.addEventListener("keydown",function(e){
-  if(Shell.active!==KEY) return;
-  if(e.key==="Enter" && S.phase==="check") nextProblem();
+  if(Shell.active!==KEY || Shell.locked || TI.isOpen()) return;
+  if(e.key==="Enter" && S.phase==="check"){ e.preventDefault(); Shell.next(); }
 });
 
-return {start:begin};
-
+return {
+  start:begin, submit:submit, fill:fill, advance:advance, rerender:render,
+  refresh:function(){ setPhase(S.phase); },
+  demoMode:function(){ S.demoing=true; S.hint=false; S.busy=false; },
+  phase:function(){ return S.phase; }, wantOp:function(){ return wantSign(); }
+};
 })();
+
+
 /* ================= muldiv ================= */
 Shell.engines["muldiv"] = (function(){
 const KEY="muldiv";
 
 /* ============ formatting ============ */
-const MINUS="\u2212", TIMES="\u00d7", DIV="\u00f7";
+const MINUS="−", TIMES="×", DIV="÷";
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function dash(s){return String(s).replace(/-/g,MINUS);}
 
 /* ============ parsing ============ */
 function parseInt2(raw){
   if(raw===null||raw===undefined) return null;
-  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g,"");
+  const s=String(raw).trim().replace(/[−–—]/g,"-").replace(/\s+/g,"");
   const m=s.match(/^([+-]?)(\d+)$/);
   if(!m) return null;
   return (m[1]==="-"?-1:1)*(+m[2]);
@@ -876,16 +1454,15 @@ function genProblem(){
 
 /* ============ state ============ */
 const S={
-  p:genProblem(), phase:"pick",
-  opIn:"", ansIn:"", miss:"", hint:false, done:0, streak:0, clean:true, firstId:null
+  p:null, phase:"target",
+  opIn:"", ansIn:"", chkIn:"", hint:false, clean:true, firstId:null, demoing:false, busy:false
 };
 const clearTimers=Shell.clearTimers, later=Shell.later;
 
-function after(){return ["cancel","compute","solved","check"].indexOf(S.phase)>=0;}
-function broughtDown(){return ["compute","solved","check"].indexOf(S.phase)>=0;}
-function solvedYet(){return ["solved","check"].indexOf(S.phase)>=0;}
-function moved(){return S.phase!=="pick";}           /* the operation has been chosen */
-function undoNum(){return S.p.a;}                    /* the number both sides get worked by */
+function after(){return ["cancel","compute","solved","verify","check"].indexOf(S.phase)>=0;}
+function broughtDown(){return ["compute","solved","verify","check"].indexOf(S.phase)>=0;}
+function solvedYet(){return ["solved","verify","check"].indexOf(S.phase)>=0;}
+function moved(){return S.phase!=="pick" && S.phase!=="target";}           /* the operation has been chosen */
 
 /* ============ rendering pieces ============ */
 function boxHTML(id,val,extra){
@@ -896,9 +1473,11 @@ function dfrac(t,b,cls){
   return '<span class="dfrac '+(cls||"")+'"><span class="t">'+t+'</span>'
        + '<span class="bar"></span><span class="b">'+b+'</span></span>';
 }
-function mgroup(mult,inner,tall,cls){
-  return '<span class="mgroup'+(tall?" tall":"")+' '+(cls||"")+'">'+mult
-       + '<span class="paren">(</span>'+inner+'<span class="paren">)</span></span>';
+/* the multiplier sits on the outside of each side: 4(y/4) = (−5)4 when y is on the left */
+function mgroup(mult,inner,tall,cls,before){
+  const grp='<span class="paren">(</span>'+inner+'<span class="paren">)</span>';
+  return '<span class="mgroup'+(tall?" tall":"")+' '+(cls||"")+'">'
+       + (before ? mult+grp : grp+mult) + '</span>';
 }
 function strikeCls(){return S.phase==="cancel"?"cancelling":(after()?"struck":"");}
 function wrapStrike(html){
@@ -909,8 +1488,9 @@ function wrapStrike(html){
 /* the variable term exactly as the problem is written: 5y  or  y over 4 */
 function varTermHTML(){
   const p=S.p;
-  if(p.needs==="divide") return wrapStrike(dash(p.a))+p.V;
-  return dfrac(p.V,wrapStrike(String(p.a)));
+  const ph=S.phase;
+  if(p.needs==="divide") return '<span class="tpair">'+Shell.mark(ph,wrapStrike(dash(p.a)),"a","a")+Shell.mark(ph,p.V,"v","a")+'</span>';
+  return dfrac(Shell.mark(ph,p.V,"v","a"),Shell.mark(ph,wrapStrike(String(p.a)),"a","a"));
 }
 
 /* the side of the equation holding the variable */
@@ -922,22 +1502,21 @@ function varSideHTML(id){
     return dfrac(varTermHTML(),den,"grow");
   }
   const mult = S.phase==="enter" ? boxHTML(id,S.opIn) : wrapStrike(String(p.a));
-  return mgroup(mult,varTermHTML(),true,"fade");
+  return mgroup(mult,varTermHTML(),true,"fade",p.varLeft);
 }
 
 /* the side of the equation holding the lone number */
 function numSideHTML(id){
   const p=S.p;
   const live = after() ? "blue" : "";
-  if(!moved()) return dash(p.C);
+  if(!moved()) return Shell.mark(S.phase,dash(p.C),"c","a");
   if(p.needs==="divide"){
     const den = S.phase==="enter" ? boxHTML(id,S.opIn) : dash(p.a);
     return dfrac(dash(p.C),den,"grow "+live);
   }
   const mult = S.phase==="enter" ? boxHTML(id,S.opIn) : String(p.a);
-  return mgroup(mult,dash(p.C),false,"fade "+live);
+  return mgroup(mult,dash(p.C),false,"fade "+live,!p.varLeft);
 }
-
 
 function renderEquation(){
   const p=S.p;
@@ -958,37 +1537,41 @@ function renderEquation(){
     const a3=cell(ansHTML);
     html += (p.varLeft?[a1,a2,a3]:[a3,a2,a1]).join("");
   }
-  document.getElementById("eq").innerHTML=html;
+  byId("eq").innerHTML=html;
   if(S.phase==="enter") S.firstId=leftId;
 }
 
+/* the variable side with the answer put in */
+function subHTML(){
+  const p=S.p, solG='<span class="green">'+dash(p.sol)+'</span>';
+  return p.needs==="divide"
+    ? dash(p.a)+'<span class="paren">(</span>'+solG+'<span class="paren">)</span>'
+    : dfrac(solG,String(p.a));
+}
 function renderPanel(){
-  const el=document.getElementById("panel"), p=S.p;
+  const el=byId("panel"), p=S.p;
   if(S.phase==="pick"){
     el.innerHTML=Shell.opsHTML();
-  } else if(S.phase==="check"){
-    const solG='<span class="green">'+dash(p.sol)+'</span>';
-    const sub = p.needs==="divide"
-      ? dash(p.a)+'<span class="paren">(</span>'+solG+'<span class="paren">)</span>'
-      : dfrac(solG,String(p.a));
-    const orig = p.needs==="divide" ? dash(p.a)+p.V : dfrac(p.V,String(p.a));
-    const C=dash(p.C), eq=' <span class="eqsign">=</span> ', tick=' <span class="green">&#10003;</span>';
-    const origLine = p.varLeft ? orig+eq+C : C+eq+orig;
-    const subLine  = p.varLeft ? sub+eq+C+tick : C+eq+sub+tick;
-    el.innerHTML='<div class="checkline"><div class="orig">'+origLine+'</div><div class="sub">'+subLine+'</div></div>';
+  } else if(S.phase==="verify" || S.phase==="check"){
+    el.innerHTML=Shell.checkHTML({varLeft:p.varLeft,
+      orig: p.needs==="divide" ? dash(p.a)+p.V : dfrac(p.V,String(p.a)),
+      subbed:subHTML(), C:dash(p.C), box:boxHTML("chk",S.chkIn,""), done:S.phase==="check"});
   } else {
     el.innerHTML="";
   }
 }
 
 function renderPrompt(){
-  const el=document.getElementById("promptbar"), p=S.p, V=p.V, a=p.a, C=p.C;
-  const hintBtn='<button class="link" id="hintBtn">'+(S.hint?"Hide hint":"Hint")+'</button>';
+  const el=byId("promptbar"), p=S.p, V=p.V, a=p.a, C=p.C;
+  const hintBtn=Shell.hintBtn();
   const diffSigns=(a<0)!==(C<0);
   let h="";
 
-  if(S.phase==="pick"){
-    h='<div class="prompt"><span>What do you do to <strong>both sides</strong> to get '+V+' by itself?</span>'+hintBtn;
+  if(S.phase==="target"){
+    h='<div class="prompt"><span>Click on what we need to <strong>get rid of</strong>.</span></div>';
+  }
+  else if(S.phase==="pick"){
+    h='<div class="prompt">'+Shell.pickPrompt((p.needs==="divide"?"mul":"div"), (p.needs==="divide"?"div":"mul"))+hintBtn;
     if(S.hint) h+='<div class="hintline">'+(p.needs==="divide"
       ? V+' is being <strong>multiplied</strong> by '+dash(a)+'. Division undoes multiplication &mdash; pick '+DIV+'.'
       : V+' is being <strong>divided</strong> by '+a+'. Multiplication undoes division &mdash; pick ( ).')+'</div>';
@@ -1023,125 +1606,226 @@ function renderPrompt(){
   else if(S.phase==="solved"){
     h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
   }
+  else if(S.phase==="verify"){
+    h='<div class="prompt"><span>Check it: put</span><span class="math">'+dash(p.sol)
+      +'</span><span>in for '+V+'. Work out that side &mdash; what does it come out to?</span>'+hintBtn;
+    if(S.hint) h+='<div class="hintline">'+(p.needs==="divide"
+      ? dash(a)+' '+TIMES+' '+dash(p.sol)
+      : dash(p.sol)+' '+DIV+' '+a)+'. If '+V+' is right, it comes out to '+dash(C)+'.</div>';
+    h+='</div>';
+  }
   else if(S.phase==="check"){
     h='<div class="row-between"><div class="prompt"><span>Put</span><span class="math">'+dash(p.sol)
       +'</span><span>back in for '+V+' and both sides match.</span></div>'
-      +'<button class="next" id="nextBtn">Next problem &rarr;</button></div>';
+      +'<button class="next" id="nextBtn" type="button">'+Shell.nextLabel()+'</button></div>';
   }
-  if(S.miss) h+='<div class="missline">'+S.miss+'</div>';
-  if(S.phase!=="check") h+='<div><button class="link skip" id="skipBtn">Skip</button></div>';
   el.innerHTML=h;
 }
 
 function render(){
-  Shell.head(KEY); renderEquation(); renderPanel(); renderPrompt(); attach(); focusFirst();
+  Shell.head(KEY); renderEquation(); renderPanel(); renderPrompt(); attach(); Shell.afterRender(); focusFirst();
 }
 function focusFirst(){
+  if(Shell.demo) return;
   later(60,function(){
-    const el=S.firstId&&document.getElementById(S.firstId);
-    if(el) el.focus();
+    const el=S.firstId&&byId(S.firstId);
+    if(el && !el.disabled) el.focus();
   });
 }
 
 /* ============ flow ============ */
 function setPhase(ph){
   clearTimers();
-  S.phase=ph; S.miss="";
+  S.busy=false;
+  S.phase=ph;
   if(ph==="enter") S.firstId="opA";
   else if(ph==="compute") S.firstId="ans";
+  else if(ph==="verify") S.firstId="chk";
   else S.firstId=null;
   render();
+  if(S.demoing) return;
   if(ph==="cancel") later(1700,function(){ setPhase("compute"); });
-  if(ph==="solved") later(850,function(){ setPhase("check"); });
+  if(ph==="solved") later(850,function(){ setPhase("verify"); });
+}
+function describe(){
+  const p=S.p;
+  const term = p.needs==="divide" ? dash(p.a)+p.V : p.V+"/"+p.a;
+  return {q: p.varLeft ? term+" = "+dash(p.C) : dash(p.C)+" = "+term, a: p.V+" = "+dash(p.sol)};
 }
 function finish(){
-  Shell.solved(S.clean);
-  setPhase("solved");
+  Shell.solved(S.clean, describe());
+  setPhase("check");
 }
 function flagMiss(msg){
-  S.clean=false; S.miss=msg; renderPrompt(); attach();
-  later(2600,function(){ S.miss=""; renderPrompt(); attach(); });
+  S.clean=false;
+  Shell.missed(msg, describe());
 }
-function missMessage(){
-  if(S.phase==="enter") return "Not quite \u2014 check the number and its sign, then try again.";
-  if(S.phase==="compute") return "Not quite \u2014 check the sign, then try again.";
-  return "";
+function accept(ids,ms,fn){ S.busy=true; Shell.markOK(ids); later(ms,fn); }
+
+function submit(fromId,auto){
+  if(Shell.locked || S.busy || S.demoing) return;
+  /* auto = called while typing: a right answer moves on, anything else waits for Enter */
+  const ask=function(id,q){ if(!auto) Shell.askFor(id,q); },
+        note=function(m){ if(!auto) Shell.note(m); },
+        miss=function(m){ if(!auto) flagMiss(m); };
+  const p=S.p, ph=S.phase;
+  if(ph==="enter"){
+    if(!S.opIn.trim()) return ask("opA");
+    const v=parseInt2(S.opIn);
+    if(v===null) return note("Type a whole number, like 6 or -6.");
+    if(v===p.a) return accept(["opA","opB"],300,function(){ S.hint=false; setPhase("cancel"); });
+    return miss("Not quite — it has to be the number with "+p.V+", sign and all.");
+  }
+  if(ph==="compute"){
+    if(!S.ansIn.trim()) return ask("ans");
+    const v=parseInt2(S.ansIn);
+    if(v===null) return note("Type a whole number, like 6 or -6.");
+    if(v===p.sol) return accept(["ans"],280,function(){ S.hint=false; setPhase("solved"); });
+    return miss("Not quite — that's not what that side works out to.");
+  }
+  if(ph==="verify"){
+    if(!S.chkIn.trim()) return ask("chk");
+    const v=parseInt2(S.chkIn);
+    if(v===null) return note("Type a whole number, like 6 or -6.");
+    if(v===p.C) return accept(["chk"],300,finish);
+    return miss("Not quite — work that side out again. It comes out to "+dash(p.C)+".");
+  }
 }
-function nextProblem(){ Shell.next(); }
-function begin(){
+
+/* the walk-through after a miss */
+function fill(){
+  const p=S.p;
+  switch(S.phase){
+    case "enter":   S.opIn=String(p.a); break;
+    case "compute": S.ansIn=String(p.sol); break;
+    case "verify":  S.chkIn=String(p.C); break;
+    default: return false;
+  }
+  sync({opA:S.opIn, opB:S.opIn, ans:S.ansIn, chk:S.chkIn});
+  return true;
+}
+function sync(vals){ Object.keys(vals).forEach(function(id){ const el=byId(id); if(el) el.value=vals[id]; }); }
+function advance(){
+  switch(S.phase){
+    case "target":  setPhase("pick"); return 1700;
+    case "pick":    S.opIn=""; setPhase("enter"); return 900;
+    case "enter":   setPhase("cancel"); return 1900;
+    case "cancel":  S.ansIn=""; setPhase("compute"); return 900;
+    case "compute": setPhase("solved"); return 1000;
+    case "solved":  S.chkIn=""; setPhase("verify"); return 900;
+    case "verify":  Shell.demo.done=true; setPhase("check"); return 0;
+    default:        if(Shell.demo){ Shell.demo.done=true; render(); } return 0;
+  }
+}
+
+function begin(level,saved,variant){
   clearTimers();
-  S.p=genProblem(); S.phase="pick";
-  S.opIn=""; S.ansIn=""; S.hint=false; S.clean=true; S.miss=""; S.firstId=null;
+  S.p=saved || (variant==="mul" ? genMul() : variant==="div" ? genDiv() : genProblem()); S.phase="target";
+  S.opIn=""; S.ansIn=""; S.chkIn=""; S.hint=false; S.clean=true; S.firstId=null; S.demoing=false; S.busy=false;
+  Shell.started(KEY,null,S.p);
   render();
 }
 
 /* ============ input handling ============ */
 function attach(){
-  const hb=document.getElementById("hintBtn");
-  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); };
-  const sb=document.getElementById("skipBtn");
-  if(sb) sb.onclick=nextProblem;
-  const nb=document.getElementById("nextBtn");
-  if(nb) nb.onclick=nextProblem;
-
+  const hb=byId("hintBtn");
+  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); Shell.fit(); };
+  const nb=byId("nextBtn");
+  if(nb) nb.onclick=function(){ Shell.next(); };
   Shell.bindOps(chooseOp);
+  Shell.bindTargets(chooseTarget);
 
-  bind("opA",onOp); bind("opB",onOp); bind("ans",onCompute);
+  bind("opA",onOp); bind("opB",onOp);
+  bind("ans",function(e){ S.ansIn=e.target.value; });
+  bind("chk",function(e){ S.chkIn=e.target.value; });
 }
 function bind(id,handler){
-  const el=document.getElementById(id);
+  const el=byId(id);
   if(!el) return;
-  el.oninput=handler;
-  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); flagMiss(missMessage()); } };
+  el.oninput=function(e){ handler(e); autoCheck(id); };
+  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); submit(id); } };
 }
 
+/* every keystroke: a right answer moves on; if they keep typing after one, re-check what's there now */
+function formsFor(id){
+  const p=S.p;
+  switch(id){
+    case "opA": case "opB": return [String(p.a)];
+    case "ans": return [String(p.sol)];
+    case "chk": return [String(p.C)];
+  }
+  return null;
+}
+function cantBeRight(id){
+  const el=byId(id), f=formsFor(id);
+  return !!(el && f && !Shell.couldBe(el.value,f));
+}
+function wrongMsg(){
+  const p=S.p;
+  switch(S.phase){
+    case "enter":   return "Not quite \u2014 it has to be the number with "+p.V+", sign and all.";
+    case "compute": return "Not quite \u2014 that's not what that side works out to.";
+    case "verify":  return "Not quite \u2014 work that side out again. It comes out to "+dash(p.C)+".";
+  }
+  return "Not quite.";
+}
+function autoCheck(id){
+  if(Shell.locked || S.demoing) return;
+  if(S.busy){
+    clearTimers(); S.busy=false;
+    document.querySelectorAll("#eq .box.ok, #panel .box.ok").forEach(function(b){ b.classList.remove("ok"); });
+    ["slD","slN"].forEach(function(i){ const sl=byId(i); if(sl && sl.className==="slash draw") sl.className="pend"; });
+  }
+  /* a wrong answer counts the moment it's typed \u2014 no need to press Enter */
+  if(cantBeRight(id)){ flagMiss(wrongMsg()); return; }
+  submit(id,true);
+  Shell.fit();
+}
+function chooseTarget(id,el){
+  if(Shell.locked) return;
+  if(id==="a"){ S.hint=false; setPhase("pick"); return; }
+  Shell.shake(el); flagMiss(Shell.targetMiss(id,S.p.V));
+}
 function chooseOp(kind,btn){
-  if(kind===S.p.needs){ S.hint=false; setPhase("enter"); return; }
-  S.clean=false;
+  if(Shell.locked || S.busy) return;
+  if(kind===S.p.needs){ S.hint=false; S.busy=true; Shell.fillBlank(btn,function(){ setPhase("enter"); }); return; }
   Shell.shake(btn);
   if(kind==="add"||kind==="sub"){
-    flagMiss("Nothing is being added here \u2014 "+S.p.V+" is "
+    flagMiss("Nothing is being added here — "+S.p.V+" is "
       +(S.p.needs==="divide" ? "multiplied by "+dash(S.p.a) : "divided by "+S.p.a)
       +", so adding or subtracting won't free it.");
   } else {
     flagMiss(S.p.needs==="divide"
-      ? "That side is already a multiplication \u2014 multiplying again won't free "+S.p.V+"."
-      : S.p.V+" is already being divided \u2014 dividing again won't free it.");
+      ? "That side is already a multiplication — multiplying again won't free "+S.p.V+". Division undoes it."
+      : S.p.V+" is already being divided — dividing again won't free it. Multiplication undoes it.");
   }
 }
-
 function onOp(e){
   S.opIn=e.target.value;
-  const other = e.target.id==="opA" ? document.getElementById("opB") : document.getElementById("opA");
+  const other = e.target.id==="opA" ? byId("opB") : byId("opA");
   if(other && other.value!==S.opIn) other.value=S.opIn;
-  const v=parseInt2(S.opIn);
-  const ok = v!==null && v===undoNum();
-  const cls="box"+(ok?" ok":"");
-  ["opA","opB"].forEach(function(id){const b=document.getElementById(id);if(b)b.className=cls;});
-  clearTimers();
-  if(ok) later(300,function(){ S.hint=false; setPhase("cancel"); });
-}
-function onCompute(e){
-  S.ansIn=e.target.value;
-  const v=parseInt2(S.ansIn);
-  clearTimers();
-  if(v!==null && v===S.p.sol) later(280,finish);
 }
 
 document.addEventListener("keydown",function(e){
-  if(Shell.active!==KEY) return;
-  if(e.key==="Enter" && S.phase==="check") nextProblem();
+  if(Shell.active!==KEY || Shell.locked || TI.isOpen()) return;
+  if(e.key==="Enter" && S.phase==="check"){ e.preventDefault(); Shell.next(); }
 });
 
-return {start:begin};
-
+return {
+  start:begin, submit:submit, fill:fill, advance:advance, rerender:render,
+  refresh:function(){ setPhase(S.phase); },
+  demoMode:function(){ S.demoing=true; S.hint=false; S.busy=false; },
+  phase:function(){ return S.phase; }, wantOp:function(){ return S.p.needs; }
+};
 })();
+
+
 /* ================= frac ================= */
 Shell.engines["frac"] = (function(){
 const KEY="frac";
 
 /* ============ formatting ============ */
-const MINUS="\u2212", TIMES="\u00d7";
+const MINUS="−", TIMES="×";
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function dash(s){return String(s).replace(/-/g,MINUS);}
 function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}return a||1;}
@@ -1149,7 +1833,7 @@ function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){const t=b;b=a%b;a=t;}retu
 /* ============ parsing ============ */
 function parseInt2(raw){
   if(raw===null||raw===undefined) return null;
-  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g,"");
+  const s=String(raw).trim().replace(/[−–—]/g,"-").replace(/\s+/g,"");
   const m=s.match(/^([+-]?)(\d+)$/);
   if(!m) return null;
   return (m[1]==="-"?-1:1)*(+m[2]);
@@ -1157,7 +1841,7 @@ function parseInt2(raw){
 /* "6" or "7/3" — a top-heavy fraction is fine here, a mixed number is not */
 function parseFracIn(raw){
   if(raw===null||raw===undefined) return null;
-  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g,"");
+  const s=String(raw).trim().replace(/[−–—]/g,"-").replace(/\s+/g,"");
   let m;
   if((m=s.match(/^([+-]?)(\d+)\/(\d+)$/))){
     const d=+m[3];
@@ -1169,7 +1853,7 @@ function parseFracIn(raw){
 /* "2 1/3" — a whole number and a leftover fraction */
 function parseMixIn(raw){
   if(raw===null||raw===undefined) return null;
-  const s=String(raw).trim().replace(/[\u2212\u2013\u2014]/g,"-").replace(/\s+/g," ");
+  const s=String(raw).trim().replace(/[−–—]/g,"-").replace(/\s+/g," ");
   const m=s.match(/^([+-]?)\s*(\d+)\s+(\d+)\/(\d+)$/);
   if(!m) return null;
   const d=+m[4];
@@ -1182,8 +1866,8 @@ function pick(a){return a[Math.floor(Math.random()*a.length)];}
 function properDivs(n){const out=[];for(let d=2;d<n;d++) if(n%d===0) out.push(d);return out;}
 const VARS=["x","y","n","m","k","t","w","p","h","r","b","c"];
 
-/* (s\u00b7a/b)V = C.  How much of the a cancels into C decides the shape of the problem:
-   all of it  -> a whole-number answer, the old behaviour
+/* (s·a/b)V = C.  How much of the a cancels into C decides the shape of the problem:
+   all of it  -> a whole-number answer
    some of it -> a fraction answer after a partial cancel
    none of it -> no cancelling step at all */
 function genProblem(){
@@ -1199,13 +1883,13 @@ function genProblem(){
     }
     const s=Math.random()<0.5?-1:1;
     let C;
-    if(kind==="full"){                          /* cancels all the way */
+    if(kind==="full"){
       C = a*rint(2,10)*(Math.random()<0.4?-1:1);
-    } else if(kind==="partial"){                /* cancels part of the way */
+    } else if(kind==="partial"){
       const g=pick(properDivs(a)), rest=a/g, m=rint(2,9);
       if(gcd(m,rest)!==1) continue;
       C = g*m*(Math.random()<0.4?-1:1);
-    } else {                                    /* nothing in common: no cancelling */
+    } else {
       C = rint(2,15)*(Math.random()<0.4?-1:1);
       if(gcd(a,Math.abs(C))!==1) continue;
     }
@@ -1218,17 +1902,17 @@ function genProblem(){
 
 /* ============ state ============ */
 const S={
-  p:genProblem(), phase:"pick",
-  numIn:"", denIn:"", simpDen:"", simpNum:"", ansIn:"", mixIn:"",
-  miss:"", hint:false, clean:true, firstId:null
+  p:null, phase:"target",
+  numIn:"", denIn:"", simpDen:"", simpNum:"", ansIn:"", mixIn:"", chkIn:"",
+  hint:false, clean:true, firstId:null, demoing:false, busy:false
 };
 const clearTimers=Shell.clearTimers, later=Shell.later;
 
-function moved(){return S.phase!=="pick";}
-function after(){return ["cancel","simplify","compute","mixed","solved","check"].indexOf(S.phase)>=0;}
-function reduced(){return ["compute","mixed","solved","check"].indexOf(S.phase)>=0;}
+function moved(){return S.phase!=="pick" && S.phase!=="target";}
+function after(){return ["cancel","simplify","compute","mixed","solved","verify","check"].indexOf(S.phase)>=0;}
+function reduced(){return ["compute","mixed","solved","verify","check"].indexOf(S.phase)>=0;}
 function broughtDown(){return reduced();}
-function solvedYet(){return ["solved","check"].indexOf(S.phase)>=0;}
+function solvedYet(){return ["solved","verify","check"].indexOf(S.phase)>=0;}
 
 /* how much the two numbers share, and what is left after cancelling */
 function gFac(){return gcd(S.p.a,Math.abs(S.p.C));}
@@ -1238,6 +1922,8 @@ function redNum(){return S.p.C/gFac();}
 function improper(){return S.p.den>1 && Math.abs(S.p.num)>S.p.den;}
 function wholePart(){return Math.trunc(Math.abs(S.p.num)/S.p.den);}
 function restPart(){return Math.abs(S.p.num)%S.p.den;}
+function ansText(){ const p=S.p; return p.den===1 ? String(p.num) : (p.num<0?"-":"")+Math.abs(p.num)+"/"+p.den; }
+function mixText(){ return (S.p.num<0?"-":"")+wholePart()+" "+restPart()+"/"+S.p.den; }
 
 /* ============ rendering pieces ============ */
 function boxHTML(id,val,extra){
@@ -1248,9 +1934,11 @@ function cell(html,cls){return '<div class="cell '+(cls||"")+'">'+html+'</div>';
 function dfrac(t,b){
   return '<span class="dfrac"><span class="t">'+t+'</span><span class="bar"></span><span class="b">'+b+'</span></span>';
 }
-function mgroup(mult,inner,tall,cls){
-  return '<span class="mgroup'+(tall?" tall":"")+' '+(cls||"")+'">'+mult
-       + '<span class="paren">(</span>'+inner+'<span class="paren">)</span></span>';
+/* the reciprocal sits on the outside of each side: far left on the left side, far right on the right */
+function mgroup(mult,inner,tall,cls,before){
+  const grp='<span class="paren">(</span>'+inner+'<span class="paren">)</span>';
+  return '<span class="mgroup'+(tall?" tall":"")+' '+(cls||"")+'">'
+       + (before ? mult+grp : grp+mult) + '</span>';
 }
 /* top-heavy form, the way it comes out of the multiplication */
 function fracHTML(n,d){
@@ -1278,10 +1966,8 @@ function recipHTML(cancelled){
   return cancelled ? '<span class="'+slashCls()+'">'+inner+'</span>' : inner;
 }
 function fracBoxHTML(nId,dId){
-  const ok=recipOK();
-  const cls=" mini"+(ok?" ok":"");
-  return '<span class="fracbox">'+boxHTML(nId,S.numIn,cls)
-       + '<span class="bar"></span>'+boxHTML(dId,S.denIn,cls)+'</span>';
+  return '<span class="fracbox">'+boxHTML(nId,S.numIn," mini")
+       + '<span class="bar"></span>'+boxHTML(dId,S.denIn," mini")+'</span>';
 }
 function recipOK(){
   const p=S.p, n=parseInt2(S.numIn), d=parseInt2(S.denIn);
@@ -1299,36 +1985,35 @@ function simpPartial(){
   const g=S.p.a/dv;
   return Number.isInteger(g) && g>1 && nv===S.p.C/g;
 }
-function pendCls(ok,live){return live ? (ok?"slash draw":"pend") : "slash cross";}
 function recipCancelHTML(live){
   const p=S.p;
-  const den='<span class="cx below"><span id="slD" class="'+pendCls(simpDenOK(),live)+'">'+p.a+'</span>'
-    + '<span class="redu">'+(live?boxHTML("sd",S.simpDen," tiny"+(simpDenOK()?" ok":"")):String(redDen()))+'</span></span>';
+  const den='<span class="cx below"><span id="slD" class="'+(live?"pend":"slash cross")+'">'+p.a+'</span>'
+    + '<span class="redu">'+(live?boxHTML("sd",S.simpDen," tiny"):String(redDen()))+'</span></span>';
   return (p.s<0?MINUS:"")+dfrac(p.b,den);
 }
 function constCancelHTML(live){
   return '<span class="cx above"><span class="redu">'
-    + (live?boxHTML("sn",S.simpNum," tiny"+(simpNumOK()?" ok":"")):dash(redNum()))
-    + '</span><span id="slN" class="'+pendCls(simpNumOK(),live)+'">'+dash(S.p.C)+'</span></span>';
+    + (live?boxHTML("sn",S.simpNum," tiny"):dash(redNum()))
+    + '</span><span id="slN" class="'+(live?"pend":"slash cross")+'">'+dash(S.p.C)+'</span></span>';
 }
 
 function varSideHTML(nId,dId){
   const p=S.p;
+  if(!moved()) return '<span class="tpair">'+Shell.mark(S.phase,coefHTML(false),"a","a")+Shell.mark(S.phase,p.V,"v","a")+'</span>';
   const term=coefHTML(after())+p.V;
-  if(!moved()) return term;
   const mult = S.phase==="enter" ? fracBoxHTML(nId,dId) : recipHTML(true);
-  return mgroup(mult,term,true,"fade");
+  return mgroup(mult,term,true,"fade",p.varLeft);
 }
 function numSideHTML(nId,dId){
   const p=S.p;
-  if(!moved()) return dash(p.C);
+  if(!moved()) return Shell.mark(S.phase,dash(p.C),"c","a");
   const live = after() ? "blue" : "";
   if(canSimp()){
-    if(S.phase==="simplify") return mgroup(recipCancelHTML(true),constCancelHTML(true),true,"roomy "+live);
-    if(reduced()) return mgroup(recipCancelHTML(false),constCancelHTML(false),true,"roomy "+live);
+    if(S.phase==="simplify") return mgroup(recipCancelHTML(true),constCancelHTML(true),true,"roomy "+live,!p.varLeft);
+    if(reduced()) return mgroup(recipCancelHTML(false),constCancelHTML(false),true,"roomy "+live,!p.varLeft);
   }
   const mult = S.phase==="enter" ? fracBoxHTML(nId,dId) : recipHTML(false);
-  return mgroup(mult,dash(p.C),true,"fade "+live);
+  return mgroup(mult,dash(p.C),true,"fade "+live,!p.varLeft);
 }
 
 function renderEquation(){
@@ -1355,43 +2040,45 @@ function renderEquation(){
     const a3=cell(ansHTML);
     html+=(p.varLeft?[a1,a2,a3]:[a3,a2,a1]).join("");
   }
-  document.getElementById("eq").innerHTML=html;
-  if(S.phase==="enter") S.firstId = parseInt2(S.numIn)===null ? "nL" : "dL";
+  byId("eq").innerHTML=html;
+  if(S.phase==="enter") S.firstId = "nL";
 }
 
+function subHTML(){
+  const p=S.p, solG='<span class="green">'+fracHTML(p.num,p.den)+'</span>';
+  return coefHTML(false)+'<span class="paren">(</span>'+solG+'<span class="paren">)</span>';
+}
 function renderPanel(){
-  const el=document.getElementById("panel"), p=S.p;
+  const el=byId("panel"), p=S.p;
   if(S.phase==="pick"){
     el.innerHTML=Shell.opsHTML();
-  } else if(S.phase==="check"){
-    const solG='<span class="green">'+fracHTML(p.num,p.den)+'</span>';
-    const orig=coefHTML(false)+p.V;
-    const sub=coefHTML(false)+'<span class="paren">(</span>'+solG+'<span class="paren">)</span>';
-    const C=dash(p.C), eq=' <span class="eqsign">=</span> ', tick=' <span class="green">&#10003;</span>';
-    el.innerHTML='<div class="checkline"><div class="orig">'
-      +(p.varLeft?orig+eq+C:C+eq+orig)+'</div><div class="sub">'
-      +(p.varLeft?sub+eq+C+tick:C+eq+sub+tick)+'</div></div>';
+  } else if(S.phase==="verify" || S.phase==="check"){
+    el.innerHTML=Shell.checkHTML({varLeft:p.varLeft, orig:coefHTML(false)+p.V,
+      subbed:subHTML(), C:dash(p.C), box:boxHTML("chk",S.chkIn,"")+previewHTML("chk"), done:S.phase==="check"});
   } else {
     el.innerHTML="";
   }
 }
 
 function renderPrompt(){
-  const el=document.getElementById("promptbar"), p=S.p, V=p.V;
-  const hintBtn='<button class="link" id="hintBtn">'+(S.hint?"Hide hint":"Hint")+'</button>';
+  const el=byId("promptbar"), p=S.p, V=p.V;
+  const hintBtn=Shell.hintBtn();
   const coef=coefHTML(false), rec=recipHTML(false);
   const negAns=(p.s<0)!==(p.C<0);
   let h="";
 
-  if(S.phase==="pick"){
-    h='<div class="prompt"><span>What do you do to <strong>both sides</strong> to get '+V+' by itself?</span>'+hintBtn;
+  if(S.phase==="target"){
+    h='<div class="prompt"><span>Click on what we need to <strong>get rid of</strong>.</span></div>';
+  }
+  else if(S.phase==="pick"){
+    h='<div class="prompt">'+Shell.pickPrompt("mul", "div")+hintBtn;
     if(S.hint) h+='<div class="hintline"><span>'+V+' is multiplied by</span><span class="math">'+coef+'</span>'
-      +'<span>. A fraction times its reciprocal is 1, so multiply both sides &mdash; press ( ).</span></div>';
+      +'<span>. Division undoes multiplication &mdash; press \u00f7.</span></div>';
     h+='</div>';
   }
   else if(S.phase==="enter"){
-    h='<div class="prompt"><span>Multiply both sides by the reciprocal of</span>'
-      +'<span class="math">'+coef+'</span>'+hintBtn;
+    h='<div class="prompt"><span>To divide by a fraction, multiply by its <strong>reciprocal</strong> &mdash; flip it over. '
+      +'Multiply both sides by the reciprocal of</span><span class="math">'+coef+'</span>'+hintBtn;
     if(S.hint) h+='<div class="hintline"><span>Flip it over: '+p.b+' on top, '+p.a+' on the bottom. '
       +(p.s<0?'The coefficient is negative, so the reciprocal is negative too &mdash; type the sign on top.'
              :'The coefficient is positive, so the reciprocal is positive.')+'</span></div>';
@@ -1408,8 +2095,6 @@ function renderPrompt(){
       +Math.abs(p.C)+' &divide; '+gFac()+' = '+Math.abs(redNum())+'.'
       +(p.C<0?' The number stays negative.':'')
       +(redDen()>1?' They don\'t cancel all the way &mdash; '+redDen()+' is left underneath.':'')+'</span></div>';
-    if(simpPartial()) h+='<div class="noteline">That is a common factor, but not the biggest one '
-      +'&mdash; those two can still be cancelled further.</div>';
     h+='</div>';
   }
   else if(S.phase==="compute"){
@@ -1440,22 +2125,26 @@ function renderPrompt(){
   else if(S.phase==="solved"){
     h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
   }
+  else if(S.phase==="verify"){
+    h='<div class="prompt"><span>Check it: put</span><span class="math">'+fracHTML(p.num,p.den)
+      +'</span><span>in for '+V+'. Work out that side &mdash; what does it come out to?</span>'
+      +(improper()?'<span class="faint">The top-heavy form is the easy one to multiply.</span>':'')+hintBtn;
+    if(S.hint) h+='<div class="hintline"><span>Multiply the tops and the bottoms, then simplify. If '+V
+      +' is right, you get '+dash(p.C)+'.</span></div>';
+    h+='</div>';
+  }
   else if(S.phase==="check"){
     h='<div class="row-between"><div class="prompt"><span>Put</span><span class="math">'+fracHTML(p.num,p.den)
-      +'</span><span>back in for '+V
-      +(improper()?' &mdash; the top-heavy form is the easy one to multiply &mdash; and both sides match.'
-                  :' and both sides match.')+'</span></div>'
-      +'<button class="next" id="nextBtn">Next problem &rarr;</button></div>';
+      +'</span><span>back in for '+V+' and both sides match.</span></div>'
+      +'<button class="next" id="nextBtn" type="button">'+Shell.nextLabel()+'</button></div>';
   }
-  if(S.miss) h+='<div class="missline">'+S.miss+'</div>';
-  if(S.phase!=="check") h+='<div><button class="link skip" id="skipBtn">Skip</button></div>';
   el.innerHTML=h;
 }
 
 function updatePreview(id,asMixed){
-  const pv=document.getElementById(id+"-pv");
+  const pv=byId(id+"-pv");
   if(!pv) return;
-  const box=document.getElementById(id);
+  const box=byId(id);
   const raw=box?box.value:"";
   if(asMixed){
     const m=parseMixIn(raw);
@@ -1468,172 +2157,504 @@ function updatePreview(id,asMixed){
 
 function render(){
   Shell.head(KEY); renderEquation(); renderPanel(); renderPrompt(); attach();
-  updatePreview("ans",false); updatePreview("mix",true);
+  updatePreview("ans",false); updatePreview("mix",true); updatePreview("chk",false);
+  Shell.afterRender();
   focusFirst();
 }
 function focusFirst(){
+  if(Shell.demo) return;
   later(60,function(){
-    const el=S.firstId&&document.getElementById(S.firstId);
-    if(el) el.focus();
+    const el=S.firstId&&byId(S.firstId);
+    if(el && !el.disabled) el.focus();
   });
 }
 
 /* ============ flow ============ */
 function setPhase(ph){
   clearTimers();
-  S.phase=ph; S.miss="";
+  S.busy=false;
+  S.phase=ph;
   if(ph==="enter") S.firstId="nL";
   else if(ph==="simplify") S.firstId="sd";
   else if(ph==="compute") S.firstId="ans";
   else if(ph==="mixed") S.firstId="mix";
+  else if(ph==="verify") S.firstId="chk";
   else S.firstId=null;
   render();
+  if(S.demoing) return;
   if(ph==="cancel") later(1900,function(){ setPhase(canSimp()?"simplify":"compute"); });
-  if(ph==="solved") later(850,function(){ setPhase("check"); });
+  if(ph==="solved") later(850,function(){ setPhase("verify"); });
+}
+function describe(){
+  const p=S.p;
+  const term=(p.s<0?MINUS:"")+"("+p.a+"/"+p.b+")"+p.V;
+  let ans;
+  if(p.den===1) ans=dash(String(p.num));
+  else {
+    const w=Math.trunc(Math.abs(p.num)/p.den), r=Math.abs(p.num)%p.den;
+    ans=(p.num<0?MINUS:"")+(w?w+" ":"")+r+"/"+p.den;
+  }
+  return {q: p.varLeft ? term+" = "+dash(p.C) : dash(p.C)+" = "+term, a: p.V+" = "+ans};
 }
 function finish(){
-  Shell.solved(S.clean);
-  setPhase("solved");
+  Shell.solved(S.clean, describe());
+  setPhase("check");
 }
 function flagMiss(msg){
-  S.clean=false; S.miss=msg; renderPrompt(); attach();
-  later(2800,function(){ S.miss=""; renderPrompt(); attach(); });
+  S.clean=false;
+  Shell.missed(msg, describe());
 }
-function missMessage(){
-  if(S.phase==="enter") return "Not quite \u2014 flip the fraction over, and keep the sign in mind.";
-  if(S.phase==="simplify") return "Divide both numbers by the same factor, then write what each one becomes.";
-  if(S.phase==="compute") return "Not quite \u2014 check the size and the sign, then try again.";
-  if(S.phase==="mixed") return "Not quite \u2014 write a whole number and the leftover fraction, like 2 1/3.";
-  return "";
+function accept(ids,ms,fn){ S.busy=true; Shell.markOK(ids); later(ms,fn); }
+
+function submit(fromId,auto){
+  if(Shell.locked || S.busy || S.demoing) return;
+  /* auto = called while typing: a right answer moves on, anything else waits for Enter */
+  const ask=function(id,q){ if(!auto) Shell.askFor(id,q); },
+        note=function(m){ if(!auto) Shell.note(m); },
+        miss=function(m){ if(!auto) flagMiss(m); };
+  const p=S.p, ph=S.phase;
+  if(ph==="enter"){
+    const right = fromId==="nR"||fromId==="dR";
+    if(!S.numIn.trim()) return ask(right?"nR":"nL");
+    if(!S.denIn.trim()){
+      if(auto){
+        const n=parseInt2(S.numIn);
+        if((fromId==="nL"||fromId==="nR") && n!==null && Math.abs(n)===p.b){ const d=byId(right?"dR":"dL"); if(d) d.focus(); }
+        return;
+      }
+      return Shell.askFor(right?"dR":"dL", fromId==="nL"||fromId==="nR");
+    }
+    if(parseInt2(S.numIn)===null || parseInt2(S.denIn)===null)
+      return note("Type whole numbers — put a minus sign on top if it's negative.");
+    if(recipOK()) return accept(["nL","nR","dL","dR"],320,function(){ S.hint=false; setPhase("cancel"); });
+    return miss("Not quite — the reciprocal flips the fraction over and keeps its sign.");
+  }
+  if(ph==="simplify"){
+    if(!S.simpDen.trim()) return ask("sd");
+    if(!S.simpNum.trim()){
+      if(auto){ if(fromId==="sd" && simpDenOK()){ const n=byId("sn"); if(n) n.focus(); } return; }
+      return Shell.askFor("sn", fromId==="sd");
+    }
+    if(parseInt2(S.simpDen)===null || parseInt2(S.simpNum)===null) return note("Type whole numbers.");
+    if(simpOK()){
+      S.busy=true; Shell.markOK(["sd","sn"]);
+      ["slD","slN"].forEach(function(id){ const s=byId(id); if(s) s.className="slash draw"; });
+      later(560,function(){ S.hint=false; setPhase("compute"); });
+      return;
+    }
+    if(simpPartial()) return Shell.note("That's a common factor, but not the biggest one — those two can still be cancelled further.");
+    return miss("Not quite — divide "+p.a+" and "+Math.abs(p.C)+" by the biggest number that goes into both.");
+  }
+  if(ph==="compute"){
+    if(!S.ansIn.trim()) return ask("ans");
+    const f=parseFracIn(S.ansIn);
+    if(!f) return note("Type it like 7/3 or -5.");
+    if(f.n*p.den === p.num*f.d) return accept(["ans"],280,function(){ S.hint=false; setPhase(improper()?"mixed":"solved"); });
+    return miss("Not quite — multiply the tops, keep the bottom, and watch the sign.");
+  }
+  if(ph==="mixed"){
+    if(!S.mixIn.trim()) return ask("mix");
+    const m=parseMixIn(S.mixIn);
+    if(!m) return note("Type a whole number and a fraction, like 2 1/3.");
+    if(m.d===p.den && m.w===wholePart() && m.n===restPart() && ((m.sg<0)===(p.num<0)))
+      return accept(["mix"],280,function(){ S.hint=false; setPhase("solved"); });
+    return miss("Not quite — "+p.den+" goes into "+Math.abs(p.num)+" "+wholePart()+" times with "+restPart()+" left over.");
+  }
+  if(ph==="verify"){
+    if(!S.chkIn.trim()) return ask("chk");
+    const f=parseFracIn(S.chkIn);
+    if(!f) return note("Type it like 12 or 7/3.");
+    if(f.n === p.C*f.d) return accept(["chk"],300,finish);
+    return miss("Not quite — work that side out again. It comes out to "+dash(p.C)+".");
+  }
 }
-function nextProblem(){ Shell.next(); }
-function begin(){
+
+/* the walk-through after a miss */
+function fill(){
+  const p=S.p;
+  switch(S.phase){
+    case "enter":    S.numIn=(p.s<0?"-":"")+p.b; S.denIn=String(p.a); break;
+    case "simplify": S.simpDen=String(redDen()); S.simpNum=String(redNum()); break;
+    case "compute":  S.ansIn=ansText(); break;
+    case "mixed":    S.mixIn=mixText(); break;
+    case "verify":   S.chkIn=String(p.C); break;
+    default: return false;
+  }
+  sync({nL:S.numIn, nR:S.numIn, dL:S.denIn, dR:S.denIn, sd:S.simpDen, sn:S.simpNum, ans:S.ansIn, mix:S.mixIn, chk:S.chkIn});
+  updatePreview("ans",false); updatePreview("mix",true); updatePreview("chk",false);
+  return true;
+}
+function sync(vals){ Object.keys(vals).forEach(function(id){ const el=byId(id); if(el) el.value=vals[id]; }); }
+function advance(){
+  switch(S.phase){
+    case "target":   setPhase("pick"); return 1700;
+    case "pick":     S.numIn=""; S.denIn=""; setPhase("enter"); return 900;
+    case "enter":    setPhase("cancel"); return 2000;
+    case "cancel":   setPhase(canSimp()?"simplify":"compute"); return 900;
+    case "simplify": setPhase("compute"); return 900;
+    case "compute":  setPhase(improper()?"mixed":"solved"); return improper()?900:1000;
+    case "mixed":    setPhase("solved"); return 1000;
+    case "solved":   S.chkIn=""; setPhase("verify"); return 900;
+    case "verify":   Shell.demo.done=true; setPhase("check"); return 0;
+    default:         if(Shell.demo){ Shell.demo.done=true; render(); } return 0;
+  }
+}
+
+function begin(level,saved){
   clearTimers();
-  S.p=genProblem(); S.phase="pick";
-  S.numIn=""; S.denIn=""; S.simpDen=""; S.simpNum=""; S.ansIn=""; S.mixIn="";
-  S.hint=false; S.clean=true; S.miss=""; S.firstId=null;
+  S.p=saved || genProblem(); S.phase="target";
+  S.numIn=""; S.denIn=""; S.simpDen=""; S.simpNum=""; S.ansIn=""; S.mixIn=""; S.chkIn="";
+  S.hint=false; S.clean=true; S.firstId=null; S.demoing=false; S.busy=false;
+  Shell.started(KEY,null,S.p);
   render();
 }
 
 /* ============ input handling ============ */
 function attach(){
-  const hb=document.getElementById("hintBtn");
-  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); };
-  const sb=document.getElementById("skipBtn");
-  if(sb) sb.onclick=nextProblem;
-  const nb=document.getElementById("nextBtn");
-  if(nb) nb.onclick=nextProblem;
+  const hb=byId("hintBtn");
+  if(hb) hb.onclick=function(){ S.hint=!S.hint; renderPrompt(); attach(); Shell.fit(); };
+  const nb=byId("nextBtn");
+  if(nb) nb.onclick=function(){ Shell.next(); };
   Shell.bindOps(chooseOp);
+  Shell.bindTargets(chooseTarget);
 
-  ["nL","nR"].forEach(function(id){bind(id,onNum);});
-  ["dL","dR"].forEach(function(id){bind(id,onDen);});
-  bind("sd",onSimpDen); bind("sn",onSimpNum);
-  bind("ans",onCompute); bind("mix",onMixed);
+  ["nL","nR"].forEach(function(id){ bind(id,onNum); });
+  ["dL","dR"].forEach(function(id){ bind(id,onDen); });
+  bind("sd",function(e){ S.simpDen=e.target.value; });
+  bind("sn",function(e){ S.simpNum=e.target.value; });
+  bind("ans",function(e){ S.ansIn=e.target.value; updatePreview("ans",false); });
+  bind("mix",function(e){ S.mixIn=e.target.value; updatePreview("mix",true); });
+  bind("chk",function(e){ S.chkIn=e.target.value; updatePreview("chk",false); });
 }
 function bind(id,handler){
-  const el=document.getElementById(id);
+  const el=byId(id);
   if(!el) return;
-  el.oninput=handler;
-  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); flagMiss(missMessage()); } };
+  el.oninput=function(e){ handler(e); autoCheck(id); };
+  el.onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); submit(id); } };
+}
+/* every keystroke: a right answer moves on; if they keep typing after one, re-check what's there now */
+function formsFor(id){
+  const p=S.p, sg=function(v){ return v<0?"-":""; };
+  const divs=[]; for(let g=2; g<=p.a; g++) if(p.a%g===0 && p.C%g===0) divs.push(g);
+  switch(id){
+    case "nL": case "nR": return [String(p.b), "-"+p.b];
+    case "dL": case "dR": return [String(p.a), "-"+p.a];
+    case "sd":  return divs.map(function(g){ return String(p.a/g); });
+    case "sn":  return divs.map(function(g){ return String(p.C/g); });
+    case "ans": { const o=[String(p.num)];
+                  if(p.den>1) for(let k=1;k<=12;k++) o.push(sg(p.num)+Math.abs(p.num)*k+"/"+p.den*k);
+                  return o; }
+    case "mix": return [mixText()];
+    case "chk": { const o=[String(p.C)]; for(let k=2;k<=12;k++) o.push(p.C*k+"/"+k); return o; }
+  }
+  return null;
+}
+function cantBeRight(id){
+  const el=byId(id), f=formsFor(id);
+  if(el && f && !Shell.couldBe(el.value,f)) return true;
+  /* the reciprocal: both numbers right but the signs wrong */
+  if(S.phase==="enter"){
+    const n=parseInt2(S.numIn), d=parseInt2(S.denIn);
+    if(n!==null && d!==null && Math.abs(n)===S.p.b && Math.abs(d)===S.p.a && !recipOK()) return true;
+  }
+  return false;
+}
+function wrongMsg(){
+  const p=S.p;
+  switch(S.phase){
+    case "enter":    return "Not quite \u2014 the reciprocal flips the fraction over and keeps its sign.";
+    case "simplify": return "Not quite \u2014 divide "+p.a+" and "+Math.abs(p.C)+" by the biggest number that goes into both.";
+    case "compute":  return "Not quite \u2014 multiply the tops, keep the bottom, and watch the sign.";
+    case "mixed":    return "Not quite \u2014 "+p.den+" goes into "+Math.abs(p.num)+" "+wholePart()+" times with "+restPart()+" left over.";
+    case "verify":   return "Not quite \u2014 work that side out again. It comes out to "+dash(p.C)+".";
+  }
+  return "Not quite.";
+}
+function autoCheck(id){
+  if(Shell.locked || S.demoing) return;
+  if(S.busy){
+    clearTimers(); S.busy=false;
+    document.querySelectorAll("#eq .box.ok, #panel .box.ok").forEach(function(b){ b.classList.remove("ok"); });
+    ["slD","slN"].forEach(function(i){ const sl=byId(i); if(sl && sl.className==="slash draw") sl.className="pend"; });
+  }
+  /* a wrong answer counts the moment it's typed \u2014 no need to press Enter */
+  if(cantBeRight(id)){ flagMiss(wrongMsg()); return; }
+  submit(id,true);
+  Shell.fit();
+}
+function chooseTarget(id,el){
+  if(Shell.locked) return;
+  if(id==="a"){ S.hint=false; setPhase("pick"); return; }
+  Shell.shake(el); flagMiss(Shell.targetMiss(id,S.p.V));
 }
 function chooseOp(kind,btn){
-  if(kind==="multiply"){ S.hint=false; setPhase("enter"); return; }
-  S.clean=false;
-  Shell.shake(btn);
-  if(kind==="divide"){
-    flagMiss("Dividing by a fraction is the hard way \u2014 flipping it over and multiplying "
-      +"does the same job. Press ( ).");
-  } else {
-    flagMiss("Nothing is being added here \u2014 "+S.p.V
-      +" is multiplied by a fraction, so adding or subtracting won't free it.");
+  if(Shell.locked || S.busy) return;
+  /* dividing undoes the multiplication; with a fraction that is done by multiplying by the reciprocal,
+     so ( ) is accepted too */
+  if(kind==="divide" || kind==="multiply"){
+    S.hint=false; S.busy=true;
+    const div=byId("opDiv");
+    Shell.fillBlank(div,function(){ setPhase("enter"); });
+    return;
   }
+  Shell.shake(btn);
+    flagMiss("Nothing is being added here — "+S.p.V
+      +" is multiplied by a fraction, so adding or subtracting won't free it.");
 }
 function mirror(ids,val){
   ids.forEach(function(id){
-    const b=document.getElementById(id);
+    const b=byId(id);
     if(b && b.value!==val) b.value=val;
   });
 }
-function paintFrac(){
-  const cls="box mini"+(recipOK()?" ok":"");
-  ["nL","nR","dL","dR"].forEach(function(id){
-    const b=document.getElementById(id); if(b) b.className=cls;
-  });
-}
-function onNum(e){
-  S.numIn=e.target.value;
-  mirror(["nL","nR"],S.numIn);
-  paintFrac();
-  clearTimers();
-  if(recipOK()){ later(320,function(){ S.hint=false; setPhase("cancel"); }); return; }
-  const n=parseInt2(S.numIn);
-  if(n!==null && Math.abs(n)===S.p.b && parseInt2(S.denIn)===null){
-    const d=document.getElementById(e.target.id==="nL"?"dL":"dR");
-    if(d) d.focus();
-  }
-}
-function onDen(e){
-  S.denIn=e.target.value;
-  mirror(["dL","dR"],S.denIn);
-  paintFrac();
-  clearTimers();
-  if(recipOK()) later(320,function(){ S.hint=false; setPhase("cancel"); });
-}
-function setCls(el,cls){ if(el && el.className!==cls) el.className=cls; }
-function paintSimp(){
-  if(S.phase!=="simplify") return;
-  setCls(document.getElementById("sd"),"box tiny"+(simpDenOK()?" ok":""));
-  setCls(document.getElementById("sn"),"box tiny"+(simpNumOK()?" ok":""));
-  setCls(document.getElementById("slD"),pendCls(simpDenOK(),true));
-  setCls(document.getElementById("slN"),pendCls(simpNumOK(),true));
-  renderPrompt(); attach();
-}
-function onSimpDen(e){
-  S.simpDen=e.target.value;
-  paintSimp(); clearTimers();
-  if(simpOK()){ later(420,function(){ S.hint=false; setPhase("compute"); }); return; }
-  if(simpDenOK() && parseInt2(S.simpNum)===null){
-    const sn=document.getElementById("sn"); if(sn) sn.focus();
-  }
-}
-function onSimpNum(e){
-  S.simpNum=e.target.value;
-  paintSimp(); clearTimers();
-  if(simpOK()) later(420,function(){ S.hint=false; setPhase("compute"); });
-}
-function onCompute(e){
-  S.ansIn=e.target.value;
-  updatePreview("ans",false);
-  const f=parseFracIn(S.ansIn);
-  clearTimers();
-  if(!f || !f.d) return;
-  if(f.n*S.p.den !== S.p.num*f.d) return;
-  later(280,function(){
-    if(improper()){ S.hint=false; setPhase("mixed"); }
-    else finish();
-  });
-}
-function onMixed(e){
-  S.mixIn=e.target.value;
-  updatePreview("mix",true);
-  const m=parseMixIn(S.mixIn);
-  clearTimers();
-  if(!m) return;
-  const p=S.p;
-  const ok = m.d===p.den && m.w===wholePart() && m.n===restPart() && ((m.sg<0)===(p.num<0));
-  if(ok) later(280,finish);
-}
+function onNum(e){ S.numIn=e.target.value; mirror(["nL","nR"],S.numIn); }
+function onDen(e){ S.denIn=e.target.value; mirror(["dL","dR"],S.denIn); }
 
 document.addEventListener("keydown",function(e){
-  if(Shell.active!==KEY) return;
-  if(e.key==="Enter" && S.phase==="check") nextProblem();
+  if(Shell.active!==KEY || Shell.locked || TI.isOpen()) return;
+  if(e.key==="Enter" && S.phase==="check"){ e.preventDefault(); Shell.next(); }
 });
 
-return {start:begin};
-
+return {
+  start:begin, submit:submit, fill:fill, advance:advance, rerender:render,
+  refresh:function(){ setPhase(S.phase); },
+  demoMode:function(){ S.demoing=true; S.hint=false; S.busy=false; },
+  phase:function(){ return S.phase; }, wantOp:function(){ return "divide"; }
+};
 })();
 
+
+/* ============================================================
+   Turning it in
+   ------------------------------------------------------------
+   Nothing is saved on the computer: close the tab and the work
+   is gone, so the next student never sees it.
+   - After problem ASK_AT (20) the student enters period and name
+     once, the first 20 are sent, and the drill carries on.
+   - At problem GOAL (40) everything is sent again automatically
+     with the same name. That newer one is the one that counts.
+   - The Turn in button works any time: the first time it asks for
+     the name, after that it just sends.
+   - After 40, extra practice (with hints) never changes the score.
+   ============================================================ */
+const ASK_AT = Math.min(SETTINGS.askAt, GOAL);
+
+const TI = {
+  records:[], served:0, currentDone:false,
+  info:null,                       /* {period,last,first} — kept in memory only */
+  halfDone:false, finalDone:false, /* the two automatic turn-in points have been handled */
+  sending:false, sentAt:0, sentRight:0, mode:null,
+
+  isOpen:function(){ return !byId("turnin").classList.contains("off"); },
+  counted:function(){ return TI.records.slice(0,GOAL); },
+  extraRecs:function(){ return TI.records.slice(GOAL); },
+  correct:function(list){ return (list||TI.counted()).filter(function(r){ return r.clean; }).length; },
+  breakdown:function(){
+    const cnt=TI.counted(), out=[];
+    Object.keys(KIND_LABEL).forEach(function(k){
+      const rs=cnt.filter(function(r){ return r.kind===k; });
+      if(rs.length) out.push({kind:k, label:KIND_LABEL[k], right:rs.filter(function(r){ return r.clean; }).length, n:rs.length});
+    });
+    return out;
+  },
+  record:function(clean,info,kind){
+    if(TI.currentDone) return;
+    TI.currentDone = true;
+    info = info || {q:"",a:""};
+    TI.records.push({q:info.q, a:info.a, clean:!!clean, kind:kind});
+  },
+  nextLabel:function(){
+    const n=TI.records.length;
+    if(n>=GOAL && !TI.finalDone) return "Finish &rarr;";
+    if(n>=ASK_AT && !TI.halfDone && !TI.info) return "Enter your name &rarr;";
+    return "Next problem &rarr;";
+  },
+  /* called before each new problem: is it time to turn in? */
+  wantsTurnIn:function(){
+    const n=TI.records.length;
+    if(n>=GOAL && !TI.finalDone){
+      TI.finalDone=true; TI.halfDone=true;
+      if(TI.info) TI.send();
+      TI.show(TI.info ? "status" : "final");
+      return true;
+    }
+    if(n>=ASK_AT && !TI.halfDone){
+      TI.halfDone=true;
+      if(TI.info){ TI.send(); return false; }            /* name already given: send quietly, keep going */
+      TI.show("half");
+      return true;
+    }
+    return false;
+  },
+  title:function(){
+    byId("problem-title").textContent = TI.served <= GOAL
+      ? "Problem " + TI.served + " of " + GOAL
+      : "Problem " + TI.served + " · extra practice";
+  },
+  newProblem:function(){
+    TI.served++;
+    TI.currentDone = false;
+    TI.title();
+  },
+
+  /* what goes into the two form fields */
+  fill:function(){
+    const cnt=TI.counted(), right=TI.correct(cnt), n=cnt.length;
+    const skills=TI.breakdown().map(function(b){ return b.label + " " + b.right + "/" + b.n; }).join(", ");
+    byId("studentName").value =
+        "Period " + TI.info.period + " — " + TI.info.last + " — " + TI.info.first
+      + " — " + right + " of " + n + " correct" + (n < GOAL ? " so far" : "")
+      + (skills ? " (" + skills + ")" : "") + " — " + DRILL_NAME;
+    byId("formScore").value = right;
+    TI.sentAt = n; TI.sentRight = right; TI.sending = true;
+  },
+  /* send without the student pressing anything (their name is already known) */
+  send:function(){
+    if(!TI.info) return;
+    TI.fill();
+    HTMLFormElement.prototype.submit.call(byId("gform"));
+  },
+
+  show:function(mode){
+    TI.mode = mode;
+    const cnt=TI.counted(), done=cnt.length, right=TI.correct(cnt), ex=TI.extraRecs();
+    const T={
+      half:  ["Halfway there!", "You've finished " + done + " of " + GOAL + ". Enter your period and name — your first "
+                + done + " will be sent, then you'll keep going."],
+      final: ["All " + GOAL + " done", "Enter your period and name to turn in your work."],
+      status:[done >= GOAL ? "All " + GOAL + " done" : "Your work so far", done >= GOAL ? "" : "You've finished " + done + " of " + GOAL + "."],
+      early: ["Turn in your work so far", "You've finished " + done + " of " + GOAL + "."]
+    }[mode];
+    byId("ti-title").textContent = T[0];
+    byId("ti-sub").textContent = T[1];
+    byId("ti-sub").style.display = T[1] ? "" : "none";
+
+    byId("ti-recap").innerHTML =
+        "<div>Problems<b>" + done + "</b></div>"
+      + "<div>Correct<b>" + right + "</b></div>"
+      + "<div>Missed<b>" + (done - right) + "</b></div>";
+    byId("ti-skills").innerHTML = TI.breakdown().map(function(b){
+      return '<span><b>' + b.label + '</b> ' + b.right + ' of ' + b.n + ' correct</span>';
+    }).join("");
+    byId("ti-extra").innerHTML = ex.length
+      ? '<div class="ti-extra">Extra practice: ' + TI.correct(ex) + ' of ' + ex.length + ' correct — not part of your score.</div>'
+      : '';
+    byId("ti-log").innerHTML = TI.records.length
+      ? '<div class="ti-log' + (TI.records.length > 16 ? ' cols' : '') + '">' + TI.records.map(function(r,i){
+          return '<div class="ti-row' + (i>=GOAL ? ' extra' : '') + '"><span class="ti-n">' + (i+1) + '.</span>'
+            + '<span class="ti-q">' + escHtml(r.q) + '<span class="ti-arrow">&rarr;</span>' + escHtml(r.a)
+            + (i>=GOAL ? '<span class="ti-kind">extra</span>' : '') + '</span>'
+            + '<span class="ti-k' + (r.clean ? '' : ' retry') + '">' + (r.clean ? 'correct' : 'missed') + '</span></div>';
+        }).join("") + '</div>'
+      : '<div class="ti-empty">Nothing finished yet — finished problems show up here.</div>';
+
+    /* the name form only until it has been filled in once */
+    byId("gform").classList.toggle("off", !!TI.info);
+    byId("ti-submit").textContent = mode==="half" ? "Send and keep going" : "Submit Results";
+    TI.feedback();
+
+    /* halfway: no way past without entering a name */
+    byId("ti-after").classList.toggle("off", mode==="half" && !TI.info);
+    byId("ti-after-lab").textContent = done >= GOAL ? "Want more practice?" : "Not done yet?";
+    byId("ti-back").textContent = done >= GOAL ? "Keep practicing" : "Go back and keep working";
+
+    document.querySelector(".ti-inner").classList.toggle("wide-log", TI.records.length > 16);
+    Shell.clearTimers();
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    byId("turnin").classList.remove("off");
+    byId("turnin").scrollTop = 0;
+    TI.fit();
+    if(!TI.info) setTimeout(function(){ byId("studentPeriod").focus(); }, 50);
+  },
+  /* the line under the form: who it was sent as, and whether there is newer work to send */
+  feedback:function(){
+    const fb=byId("ti-feedback");
+    if(!TI.info){ fb.innerHTML=""; return; }
+    const who='<div class="ti-who">Turning in as <b>' + escHtml(TI.info.last) + ', ' + escHtml(TI.info.first)
+      + '</b> · Period ' + escHtml(TI.info.period) + '</div>';
+    const done=TI.counted().length;
+    let msg;
+    if(TI.sending) msg='<span class="note">Sending…</span>';
+    else msg='<span class="ok">Sent: ' + TI.sentRight + ' of ' + TI.sentAt + ' correct.</span>';
+    if(!TI.sending && done > TI.sentAt)
+      msg+=' <button class="check-btn" type="button" id="ti-resend">Send updated results</button>';
+    fb.innerHTML = who + msg;
+    const rs=byId("ti-resend");
+    if(rs) rs.onclick=function(){ TI.send(); TI.feedback(); };
+  },
+  /* the turn-in card is zoomed down to fit the screen (phones may still scroll a little) */
+  fit:function(){
+    const inner=document.querySelector(".ti-inner"), wrap=byId("turnin");
+    if(!inner || wrap.classList.contains("off")) return;
+    inner.style.zoom="1";
+    const avail=wrap.clientHeight-40, need=inner.offsetHeight;
+    const k=Math.min(1, avail/need);
+    if(k<0.999) inner.style.zoom=String(Math.max(0.6, Math.floor(k*1000)/1000));
+  },
+
+  /* back to the drill: a finished problem moves on, a half-done one picks up right where it was */
+  back:function(){
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    byId("turnin").classList.add("off");
+    if(TI.currentDone){ Shell.next(); return; }
+    const eng = Shell.active && Shell.engines[Shell.active];
+    if(!eng) return;
+    if(Shell.demo){ if(!Shell.demo.done) Shell.runDemo(eng); return; }   /* finish the walk-through */
+    eng.refresh();
+  }
+};
+
+function onHiddenFrameLoad(){
+  if(!TI.sending) return;
+  TI.sending=false;
+  if(TI.isOpen()){ TI.feedback(); TI.fit(); }
+  else Shell.note("Your first " + TI.sentAt + " problems were sent ✓");
+}
+
+function nameCheck(){
+  const ln = byId("lastName").value.trim(), fn = byId("firstName").value.trim();
+  const row = function(t,v){ return '<div class="row"><span class="t">' + t + '</span>'
+    + '<span class="v' + (v ? '' : ' empty') + '">' + (v ? escHtml(v) : '—') + '</span></div>'; };
+  byId("nameCheck").innerHTML =
+      '<div class="head">This is what will be sent — check it is the right way round:</div>'
+    + row("Last name", ln) + row("First name", fn) + row("Roll call", ln && fn ? ln + ", " + fn : "");
+}
+["lastName","firstName"].forEach(function(id){ byId(id).addEventListener("input", nameCheck); });
+
+/* the student presses Submit: remember the name for the rest of this visit, then the form posts */
+byId("gform").addEventListener("submit", function(){
+  TI.info = { period:byId("studentPeriod").value.trim(),
+              last:byId("lastName").value.trim(), first:byId("firstName").value.trim() };
+  TI.fill();
+  if(TI.mode==="half"){
+    /* the post is already on its way; go straight on to the next problem */
+    setTimeout(TI.back, 60);
+  } else {
+    setTimeout(function(){ byId("gform").classList.add("off"); TI.feedback(); TI.fit(); }, 60);
+  }
+});
+byId("ti-back").addEventListener("click", TI.back);
+byId("turnin-link").addEventListener("click", function(){
+  TI.show(TI.info ? "status" : "early");
+});
+window.addEventListener("resize", function(){ Shell.fit(); TI.fit(); });
+
+/* nothing is saved, so warn before closing the page with work that hasn't been sent */
+window.addEventListener("beforeunload", function(e){
+  if(TI.records.length > TI.sentAt && TI.counted().length > TI.sentAt){ e.preventDefault(); e.returnValue=""; }
+});
+
+/* clear anything an older version of this drill saved on this computer */
+try{
+  for(let i=localStorage.length-1;i>=0;i--){
+    const k=localStorage.key(i);
+    if(k && k.indexOf("oneStepEq|")===0) localStorage.removeItem(k);
+  }
+}catch(e){}
+
+nameCheck();
 Shell.next();
+
 </script>
 </body>
 </html>
