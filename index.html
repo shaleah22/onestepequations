@@ -419,7 +419,7 @@ const escHtml = function(t){ return String(t).replace(/[&<>"]/g,function(c){ ret
 /* ============ shell: shared buttons, dealing, misses, the walk-through ============ */
 const Shell = {
   active:null, kind:null, locked:false, demo:null, current:null,
-  bag:[], recent:[], pendingLevel:null, engines:{}, timers:[], noteTimer:null,
+  bag:[], recent:[], pendingLevel:null, retryKind:null, engines:{}, timers:[], noteTimer:null,
 
   later:function(ms,fn){ Shell.timers.push(setTimeout(fn,ms)); },
   clearTimers:function(){ Shell.timers.forEach(clearTimeout); Shell.timers=[]; },
@@ -516,7 +516,9 @@ const Shell = {
     Shell.solved(false,info);
     Shell.locked=true;
     Shell.demo={msg:msg, ans:(info&&info.a)||"", done:false};
-    Shell.requeue(Shell.kind||Shell.active, Shell.current ? Shell.current.level : null);
+    /* the problem number stays put: a fresh one of the same kind comes next, under the same number */
+    Shell.retryKind = Shell.kind||Shell.active;
+    if(KIND_ENGINE[Shell.retryKind]==="addsub" && Shell.current && Shell.current.level!==null) Shell.pendingLevel=Shell.current.level;
     eng.demoMode();
     eng.rerender();
     Shell.later(Shell.DEMO_START,function(){ Shell.runDemo(eng); });
@@ -606,7 +608,7 @@ const Shell = {
       ban.innerHTML='<div class="missline">'+Shell.demo.msg+'</div>'
         +'<div class="missed-ans">This one counts as missed'
         +(Shell.demo.ans?' — the answer is <strong>'+escHtml(Shell.demo.ans)+'</strong>':'')+'.'
-        +(Shell.demo.done?'':' Watch how it goes.')+'</div>';
+        +(Shell.demo.done?' Next, try another one like it.':' Watch how it goes.')+'</div>';
       pb.insertBefore(ban,pb.firstChild);
       row.innerHTML="";
       if(Shell.demo.done){ const nb=byId("nextBtn"); if(nb) setTimeout(function(){ nb.focus(); },30); }
@@ -699,7 +701,8 @@ const Shell = {
     Shell.note("");
     TI.newProblem();
     byId("panel").innerHTML="";
-    const k=Shell.pickKind(), e=KIND_ENGINE[k];
+    const k=Shell.retryKind || Shell.pickKind(), e=KIND_ENGINE[k];
+    Shell.retryKind=null;
     Shell.kind=k; Shell.active=e;
     Shell.engines[e].start(e==="addsub" ? Shell.pickLevel() : undefined, null, variantOf(k));
   }
@@ -1090,7 +1093,7 @@ function renderPrompt(){
     h+='</div>';
   }
   else if(S.phase==="solved"){
-    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
+    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Here\'s the check.</strong></span></div>';
   }
   else if(S.phase==="verify"){
     h='<div class="prompt"><span>Check it: put</span><span class="math">'+valHTML(p.sol,m)
@@ -1146,7 +1149,7 @@ function setPhase(ph){
   render();
   if(S.demoing) return;
   if(ph==="cancel") later(1600,function(){ setPhase(needConvert()?"lcd":"compute"); });
-  if(ph==="solved") later(850,function(){ setPhase("verify"); });
+  if(ph==="solved") later(850,finish);
 }
 function txtR(r){
   if(S.level===1) return dash(decText(r));
@@ -1271,7 +1274,7 @@ function advance(){
     case "compute":
     case "simplify":setPhase(p.negVar?"flip":"solved"); return p.negVar?900:1000;
     case "flip":    setPhase("solved"); return 1000;
-    case "solved":  setPhase("verify"); return 900;
+    case "solved":  Shell.demo.done=true; setPhase("check"); return 0;
     case "verify":  Shell.demo.done=true; setPhase("check"); return 0;
     default:        if(Shell.demo){ Shell.demo.done=true; render(); } return 0;
   }
@@ -1604,7 +1607,7 @@ function renderPrompt(){
     h+='</div>';
   }
   else if(S.phase==="solved"){
-    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
+    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Here\'s the check.</strong></span></div>';
   }
   else if(S.phase==="verify"){
     h='<div class="prompt"><span>Check it: put</span><span class="math">'+dash(p.sol)
@@ -1645,7 +1648,7 @@ function setPhase(ph){
   render();
   if(S.demoing) return;
   if(ph==="cancel") later(1700,function(){ setPhase("compute"); });
-  if(ph==="solved") later(850,function(){ setPhase("verify"); });
+  if(ph==="solved") later(850,finish);
 }
 function describe(){
   const p=S.p;
@@ -1712,7 +1715,7 @@ function advance(){
     case "enter":   setPhase("cancel"); return 1900;
     case "cancel":  S.ansIn=""; setPhase("compute"); return 900;
     case "compute": setPhase("solved"); return 1000;
-    case "solved":  S.chkIn=""; setPhase("verify"); return 900;
+    case "solved":  Shell.demo.done=true; setPhase("check"); return 0;
     case "verify":  Shell.demo.done=true; setPhase("check"); return 0;
     default:        if(Shell.demo){ Shell.demo.done=true; render(); } return 0;
   }
@@ -2123,7 +2126,7 @@ function renderPrompt(){
     h+='</div>';
   }
   else if(S.phase==="solved"){
-    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Now check it.</strong></span></div>';
+    h='<div class="prompt"><span class="green"><strong>That\'s '+V+'. Here\'s the check.</strong></span></div>';
   }
   else if(S.phase==="verify"){
     h='<div class="prompt"><span>Check it: put</span><span class="math">'+fracHTML(p.num,p.den)
@@ -2183,7 +2186,7 @@ function setPhase(ph){
   render();
   if(S.demoing) return;
   if(ph==="cancel") later(1900,function(){ setPhase(canSimp()?"simplify":"compute"); });
-  if(ph==="solved") later(850,function(){ setPhase("verify"); });
+  if(ph==="solved") later(850,finish);
 }
 function describe(){
   const p=S.p;
@@ -2294,7 +2297,7 @@ function advance(){
     case "simplify": setPhase("compute"); return 900;
     case "compute":  setPhase(improper()?"mixed":"solved"); return improper()?900:1000;
     case "mixed":    setPhase("solved"); return 1000;
-    case "solved":   S.chkIn=""; setPhase("verify"); return 900;
+    case "solved":   Shell.demo.done=true; setPhase("check"); return 0;
     case "verify":   Shell.demo.done=true; setPhase("check"); return 0;
     default:         if(Shell.demo){ Shell.demo.done=true; render(); } return 0;
   }
@@ -2446,8 +2449,12 @@ const TI = {
   sending:false, sentAt:0, sentRight:0, mode:null,
 
   isOpen:function(){ return !byId("turnin").classList.contains("off"); },
-  counted:function(){ return TI.records.slice(0,GOAL); },
-  extraRecs:function(){ return TI.records.slice(GOAL); },
+  /* the score: the first try at each of problems 1..GOAL */
+  counted:function(){ return TI.records.filter(function(r){ return r.first && r.num<=GOAL; }); },
+  extraRecs:function(){ return TI.records.filter(function(r){ return r.num>GOAL; }); },
+  /* how many of problems 1..GOAL have been got right (on any try) */
+  solvedCount:function(){ return TI.records.filter(function(r){ return r.clean && r.num<=GOAL; }).length; },
+  lastMissed:function(){ const l=TI.records[TI.records.length-1]; return !!(l && !l.clean && l.num===TI.served); },
   correct:function(list){ return (list||TI.counted()).filter(function(r){ return r.clean; }).length; },
   breakdown:function(){
     const cnt=TI.counted(), out=[];
@@ -2461,17 +2468,20 @@ const TI = {
     if(TI.currentDone) return;
     TI.currentDone = true;
     info = info || {q:"",a:""};
-    TI.records.push({q:info.q, a:info.a, clean:!!clean, kind:kind});
+    const first = !TI.records.some(function(r){ return r.num===TI.served; });
+    TI.records.push({q:info.q, a:info.a, clean:!!clean, kind:kind, num:TI.served, first:first});
   },
   nextLabel:function(){
-    const n=TI.records.length;
+    if(TI.lastMissed()) return "Try another one &rarr;";
+    const n=TI.solvedCount();
     if(n>=GOAL && !TI.finalDone) return "Finish &rarr;";
     if(n>=ASK_AT && !TI.halfDone && !TI.info) return "Enter your name &rarr;";
     return "Next problem &rarr;";
   },
   /* called before each new problem: is it time to turn in? */
   wantsTurnIn:function(){
-    const n=TI.records.length;
+    if(TI.lastMissed()) return false;
+    const n=TI.solvedCount();
     if(n>=GOAL && !TI.finalDone){
       TI.finalDone=true; TI.halfDone=true;
       if(TI.info) TI.send();
@@ -2487,25 +2497,29 @@ const TI = {
     return false;
   },
   title:function(){
-    byId("problem-title").textContent = TI.served <= GOAL
+    const again = TI.records.some(function(r){ return r.num===TI.served; }) ? " · try again" : "";
+    byId("problem-title").textContent = (TI.served <= GOAL
       ? "Problem " + TI.served + " of " + GOAL
-      : "Problem " + TI.served + " · extra practice";
+      : "Problem " + TI.served + " · extra practice") + again;
   },
   newProblem:function(){
-    TI.served++;
+    if(!TI.lastMissed()) TI.served++;          /* a missed problem keeps its number */
     TI.currentDone = false;
     TI.title();
   },
 
   /* what goes into the two form fields */
   fill:function(){
-    const cnt=TI.counted(), right=TI.correct(cnt), n=cnt.length;
+    /* score = right on the first try out of the problems done; a miss means redoing that number */
+    const cnt=TI.counted(), right=TI.correct(cnt), n=cnt.length, done=TI.solvedCount(), redone=n-right;
     const skills=TI.breakdown().map(function(b){ return b.label + " " + b.right + "/" + b.n; }).join(", ");
     byId("studentName").value =
         "Period " + TI.info.period + " — " + TI.info.last + " — " + TI.info.first
-      + " — " + right + " of " + n + " correct" + (n < GOAL ? " so far" : "")
+      + " — " + right + "/" + n + " correct"
+      + " — " + done + " of " + GOAL + " done" + (done < GOAL ? " so far" : "")
+      + (redone ? ", " + redone + " had to be redone" : "")
       + (skills ? " (" + skills + ")" : "") + " — " + DRILL_NAME;
-    byId("formScore").value = right;
+    byId("formScore").value = right + "/" + n;
     TI.sentAt = n; TI.sentRight = right; TI.sending = true;
   },
   /* send without the student pressing anything (their name is already known) */
@@ -2517,7 +2531,7 @@ const TI = {
 
   show:function(mode){
     TI.mode = mode;
-    const cnt=TI.counted(), done=cnt.length, right=TI.correct(cnt), ex=TI.extraRecs();
+    const cnt=TI.counted(), done=TI.solvedCount(), right=TI.correct(cnt), ex=TI.extraRecs();
     const T={
       half:  ["Halfway there!", "You've finished " + done + " of " + GOAL + ". Enter your period and name — your first "
                 + done + " will be sent, then you'll keep going."],
@@ -2531,19 +2545,20 @@ const TI = {
 
     byId("ti-recap").innerHTML =
         "<div>Problems<b>" + done + "</b></div>"
-      + "<div>Correct<b>" + right + "</b></div>"
-      + "<div>Missed<b>" + (done - right) + "</b></div>";
+      + "<div>Right first try<b>" + right + "</b></div>"
+      + "<div>Missed<b>" + (cnt.length - right) + "</b></div>";
     byId("ti-skills").innerHTML = TI.breakdown().map(function(b){
-      return '<span><b>' + b.label + '</b> ' + b.right + ' of ' + b.n + ' correct</span>';
+      return '<span><b>' + b.label + '</b> ' + b.right + ' of ' + b.n + ' right first try</span>';
     }).join("");
     byId("ti-extra").innerHTML = ex.length
       ? '<div class="ti-extra">Extra practice: ' + TI.correct(ex) + ' of ' + ex.length + ' correct — not part of your score.</div>'
       : '';
     byId("ti-log").innerHTML = TI.records.length
       ? '<div class="ti-log' + (TI.records.length > 16 ? ' cols' : '') + '">' + TI.records.map(function(r,i){
-          return '<div class="ti-row' + (i>=GOAL ? ' extra' : '') + '"><span class="ti-n">' + (i+1) + '.</span>'
+          const ext = r.num>GOAL;
+          return '<div class="ti-row' + (ext ? ' extra' : '') + '"><span class="ti-n">' + (r.first ? r.num + '.' : '') + '</span>'
             + '<span class="ti-q">' + escHtml(r.q) + '<span class="ti-arrow">&rarr;</span>' + escHtml(r.a)
-            + (i>=GOAL ? '<span class="ti-kind">extra</span>' : '') + '</span>'
+            + (ext ? '<span class="ti-kind">extra</span>' : '') + (r.first ? '' : '<span class="ti-kind">try again</span>') + '</span>'
             + '<span class="ti-k' + (r.clean ? '' : ' retry') + '">' + (r.clean ? 'correct' : 'missed') + '</span></div>';
         }).join("") + '</div>'
       : '<div class="ti-empty">Nothing finished yet — finished problems show up here.</div>';
@@ -2575,7 +2590,7 @@ const TI = {
     const done=TI.counted().length;
     let msg;
     if(TI.sending) msg='<span class="note">Sending…</span>';
-    else msg='<span class="ok">Sent: ' + TI.sentRight + ' of ' + TI.sentAt + ' correct.</span>';
+    else msg='<span class="ok">Sent: ' + TI.sentRight + '/' + TI.sentAt + ' correct.</span>';
     if(!TI.sending && done > TI.sentAt)
       msg+=' <button class="check-btn" type="button" id="ti-resend">Send updated results</button>';
     fb.innerHTML = who + msg;
@@ -2641,7 +2656,7 @@ window.addEventListener("resize", function(){ Shell.fit(); TI.fit(); });
 
 /* nothing is saved, so warn before closing the page with work that hasn't been sent */
 window.addEventListener("beforeunload", function(e){
-  if(TI.records.length > TI.sentAt && TI.counted().length > TI.sentAt){ e.preventDefault(); e.returnValue=""; }
+  if(TI.counted().length > TI.sentAt){ e.preventDefault(); e.returnValue=""; }
 });
 
 /* clear anything an older version of this drill saved on this computer */
