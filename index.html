@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>One-Step Equations: Add, Subtract, Multiply &amp; Divide</title>
+<title>One-Step Equations: Drill</title>
 <style>
   :root{
     --ink:#0f172a; --line:#1e293b; --muted:#64748b; --faint:#94a3b8;
@@ -252,6 +252,49 @@
     background:#fff;color:var(--blue);border:2px solid #bfdbfe;}
   .turnin-link:hover{border-color:#93c5fd;background:var(--blue-bg);}
   .off{display:none !important;}
+
+  /* ===== the teaching-preview look ===== */
+  /* no sentences on the board: just the math (the Next button and the miss mark stay) */
+  .promptbar .prompt,.promptbar .hintline{display:none !important;}
+  .promptbar .row-between{justify-content:flex-end;}
+  .promptbar{min-height:3.6rem;}
+  /* no operation buttons on screen: students type the move (A + / S − / M x * / D /) */
+  .ops{display:none !important;}
+  /* the only words: a short hint on the first two steps, for the first few problems */
+  .hint1{width:100%;text-align:center;font-size:1.35rem;color:var(--muted);padding:6px 0;}
+  /* which key does what, on the step where the move is typed */
+  .keyhelp{width:100%;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 22px;padding:4px 0 6px;
+    font-size:1.05rem;color:var(--muted);}
+  .keyhelp span{white-space:nowrap;}
+  .keyhelp kbd{display:inline-block;min-width:1.6em;padding:1px 6px;margin-right:2px;border:1.5px solid var(--edge);
+    border-bottom-width:3px;border-radius:6px;background:#fff;color:var(--ink);font-family:inherit;font-weight:700;
+    text-align:center;}
+  .demoban{border-bottom:none;margin-bottom:0;padding-bottom:0;}
+  .demoban .missline{font-size:1.5rem;font-weight:700;}
+  /* adding & subtracting: line numbers up on the right like column arithmetic; "+ 8" written with a space */
+  .eq.k-addsub .cell{justify-content:flex-end;gap:.32em;}
+  .eq.k-addsub .cell.eqsign{justify-content:center;}
+  .eq.k-addsub .sgn{gap:.32em;}
+  .eq.k-addsub .box{text-align:right;padding-right:.3em;}
+  /* fractions big enough to read */
+  .eq .stack,.panel .stack{font-size:.9em;}
+  /* multiplying & dividing: one long slash through the pair that cancels */
+  .eq .cell{position:relative;}
+  .eq.k-muldiv span.cancelling,.eq.k-muldiv span.struck{text-decoration:none;}
+  .xslash{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
+  .xslash line{stroke:#334155;stroke-width:7;stroke-linecap:round;}
+  .xslash.done line{opacity:.6;}
+  .xslash.draw line{animation:xdraw .55s ease-out both;}
+  @keyframes xdraw{from{stroke-dashoffset:var(--len);}to{stroke-dashoffset:0;}}
+  /* the fade-in plays once, when the move is written, not again on every step */
+  #eq:not([data-ph="enter"]) .mgroup.fade,#eq:not([data-ph="enter"]) .dfrac.grow{animation:none;}
+  /* the check at the end: the answer flies into the problem and a check mark pops in */
+  .eq .chk-fade{opacity:.15 !important;transition:opacity .5s ease;}
+  .chk-fly{position:fixed;z-index:50;color:var(--green);font-family:Tahoma,Verdana,Geneva,sans-serif;line-height:1;
+    pointer-events:none;transition:transform .85s cubic-bezier(.45,.05,.3,1);}
+  .chk-tick{position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:.35em;color:var(--green);font-weight:700;}
+  .chk-tick.pop{animation:tickpop .45s cubic-bezier(.3,1.6,.5,1) both;}
+  @keyframes tickpop{from{opacity:0;transform:translateY(-50%) scale(.2);}to{opacity:1;transform:translateY(-50%) scale(1);}}
 
   /* ---------- the turn-in page ---------- */
   .turnin{position:fixed;inset:0;z-index:100;overflow:auto;background:#f4f6f9;font-size:16px;
@@ -605,18 +648,28 @@ const Shell = {
       const pb=byId("promptbar");
       const ban=document.createElement("div");
       ban.className="demoban";
-      ban.innerHTML='<div class="missline">'+Shell.demo.msg+'</div>'
-        +'<div class="missed-ans">This one counts as missed'
-        +(Shell.demo.ans?' — the answer is <strong>'+escHtml(Shell.demo.ans)+'</strong>':'')+'.'
-        +(Shell.demo.done?' Next, try another one like it.':' Watch how it goes.')+'</div>';
+      ban.innerHTML='<div class="missline">&#10007;&nbsp; '+(Shell.demo.ans?escHtml(Shell.demo.ans):'')+'</div>';
       pb.insertBefore(ban,pb.firstChild);
       row.innerHTML="";
-      if(Shell.demo.done){ const nb=byId("nextBtn"); if(nb) setTimeout(function(){ nb.focus(); },30); }
-      Shell.fit();
+      if(Shell.demo.done && !Shell.measuring){ const nb=byId("nextBtn"); if(nb) setTimeout(function(){ nb.focus(); },30); }
+      Shell.post(eng);
       return;
     }
     row.innerHTML="";
+    Shell.post(eng);
+  },
+  post:function(eng){
+    const ph=eng.phase(), ok=Shell.active==="addsub" || Shell.active==="muldiv";
+    byId("eq").setAttribute("data-ph", ph);
+    /* while the fractions are being rewritten, the answer line isn't written yet */
+    if(["lcd","equiv"].indexOf(ph)>=0) rowCells().forEach(function(c){ c.style.visibility="hidden"; });
+    showHint(ph);
     Shell.fit();
+    if(ph==="check" && ok){
+      byId("panel").innerHTML="";          /* the check is shown in the problem itself */
+      runCheck(Shell.measuring || Shell.checkShown);
+      if(!Shell.measuring) Shell.checkShown=true;
+    } else drawSlash();
   },
 
   /* deal a shuffled set; never three of one kind in a row, including across the join with the last set */
@@ -700,11 +753,15 @@ const Shell = {
     Shell.locked=false; Shell.demo=null;
     Shell.note("");
     TI.newProblem();
+    if(Shell.flyEl){ Shell.flyEl.remove(); Shell.flyEl=null; }
+    Shell.checkShown=false;
+    if(!Shell.retryKind) Shell.hard=drawHard();     /* a retry keeps the same difficulty */
     byId("panel").innerHTML="";
     const k=Shell.retryKind || Shell.pickKind(), e=KIND_ENGINE[k];
     Shell.retryKind=null;
     Shell.kind=k; Shell.active=e;
     Shell.engines[e].start(e==="addsub" ? Shell.pickLevel() : undefined, null, variantOf(k));
+    measureProblem();
   }
 };
 
@@ -758,7 +815,7 @@ function valHTML(r,mode){
   return '<span class="num">'+(r.n<0?MINUS:"")+(whole?'<span class="whole">'+whole+'</span>':"")+stackHTML(rest,r.d)+'</span>';
 }
 function signedHTML(r,mode){
-  return '<span class="sgn">'+(r.n<0?MINUS:"+")+valHTML(absR(r),mode)+'</span>';
+  return '<span class="sgn"><span>'+(r.n<0?MINUS:"+")+'</span>'+valHTML(absR(r),mode)+'</span>';
 }
 function overHTML(n,d){                       /* exactly as written, never reduced */
   return '<span class="num">'+(n<0?MINUS:"")+stackHTML(Math.abs(n),d)+'</span>';
@@ -800,7 +857,12 @@ function rint(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function pick(a){return a[Math.floor(Math.random()*a.length)];}
 const VARS=["x","y","n","m","k","t","w","p","h","r","b","c"];
 
-function genInt(){let n=0;while(n===0)n=rint(-16,16);return R(n);}
+/* easy: small numbers (x + 7 = 12).
+   hard: the top end of mental math, two-digit numbers that need carrying, never a round ten (x + 38 = 75) */
+function genInt(){
+  if(!Shell.hard){let n=0;while(n===0)n=rint(-16,16);return R(n);}
+  let n;do{n=rint(13,89);}while(n%10===0);return R(Math.random()<0.35?-n:n);
+}
 function genDec(){
   const d=pick([10,10,10,100]);
   const lo=d===10?5:25, hi=d===10?180:900;
@@ -816,7 +878,7 @@ function genProblem(level){
   const g = level===0?genInt : level===1?genDec : genFrac;
   const negVar = Math.random()<0.3;            /* sometimes the variable term is negative: −b */
   let a=g(), sol=g();
-  if(level===0){while(Math.abs(numOf(sol))>22) sol=g();}
+  if(level===0){const lim=Shell.hard?99:22; while(Math.abs(numOf(sol))>lim) sol=g();}
   const term=function(){return negVar?neg(sol):sol;};
   if(level===2){
     for(let i=0;i<300;i++){
@@ -1442,13 +1504,18 @@ function sign(){return Math.random()<0.35?-1:1;}
 const VARS=["x","y","n","m","k","t","w","p","h","r","b","c"];
 
 /* a mul problem is written with multiplication (5y = 35) and undone by dividing */
+/* easy: the times tables.
+   hard: the top end of mental math, a one-digit number times one in the teens (7x = 112, y/8 = 13) */
+function hardPair(){ const small=rint(3,9), big=rint(11,19); return Math.random()<0.5?[small,big]:[big,small]; }
 function genMul(){
-  const a=rint(2,12)*sign(), sol=rint(2,12)*sign();
+  const hp=hardPair();
+  const a=(Shell.hard?hp[0]:rint(2,12))*sign(), sol=(Shell.hard?hp[1]:rint(2,12))*sign();
   return {needs:"divide", a:a, sol:sol, C:a*sol, V:pick(VARS), varLeft:Math.random()<0.5};
 }
 /* a div problem is written with division (y/4 = 3) and undone by multiplying */
 function genDiv(){
-  const a=rint(2,12), C=rint(2,12)*sign();
+  const hp=hardPair();
+  const a=Shell.hard?hp[0]:rint(2,12), C=(Shell.hard?hp[1]:rint(2,12))*sign();
   return {needs:"multiply", a:a, sol:a*C, C:C, V:pick(VARS), varLeft:Math.random()<0.5};
 }
 function genProblem(){
@@ -2426,6 +2493,245 @@ return {
 };
 })();
 
+
+
+/* ============================================================
+   The teaching-preview look for the drill
+   ============================================================ */
+/* easy and hard mixed through the 40: half of each, shuffled; extra practice is a coin flip */
+let HARD_DECK=null;
+function drawHard(){
+  if(TI.served > GOAL) return Math.random()<0.5;
+  if(!HARD_DECK){
+    HARD_DECK=[];
+    for(let i=0;i<GOAL;i++) HARD_DECK.push(i<Math.floor(GOAL/2));
+    for(let i=HARD_DECK.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=HARD_DECK[i]; HARD_DECK[i]=HARD_DECK[j]; HARD_DECK[j]=t; }
+  }
+  return HARD_DECK.length ? HARD_DECK.pop() : Math.random()<0.5;
+}
+/* easy problems use whole numbers only; hard adding & subtracting mixes in decimals and fractions */
+(function(){
+  const base=Shell.pickLevel;
+  Shell.pickLevel=function(){ const l=base(); return Shell.hard ? l : 0; };
+})();
+
+/* As big as the screen allows: play the problem through once out of sight to find its biggest step,
+   then use one size for the whole problem so it never jumps or needs scrolling. */
+Shell.need=null;
+function measureProblem(){
+  const eng=Shell.engines[Shell.active], c=Shell.current, box=byId("fitbox"), eq=byId("eq"), panel=byId("panel");
+  if(!eng || !c) return;
+  Shell.measuring=true; box.style.visibility="hidden"; box.style.zoom="1";
+  Shell.demo={msg:"", ans:"", done:false}; Shell.locked=true;
+  eng.demoMode(); eng.rerender();
+  let w=0, h=0;
+  const take=function(){
+    w=Math.max(w, eq.scrollWidth);
+    const ops=panel.querySelector(".ops");
+    if(ops && ops.children.length){
+      const a=ops.children[0], z=ops.children[ops.children.length-1];
+      w=Math.max(w, z.offsetLeft+z.offsetWidth-a.offsetLeft);
+    }
+    h=Math.max(h, box.scrollHeight);
+  };
+  take();
+  let filled=false;
+  for(let g=0; g<80 && !Shell.demo.done; g++){
+    if(!filled && eng.fill()){ filled=true; take(); continue; }
+    filled=false; eng.advance(); take();
+  }
+  take();
+  Shell.measuring=false;
+  Shell.clearTimers();
+  Shell.need={w:w, h:h};
+  Shell.demo=null; Shell.locked=false; Shell.checkShown=false;
+  eng.start(c.level, c.p, variantOf(Shell.kind));
+  box.style.visibility="";
+  Shell.fit();
+}
+/* a hint for the first steps, only on the first few problems */
+const HINT_PROBLEMS=3;
+const HINTS={target:"Click what to get rid of.", pick:"Type the inverse operation."};
+function showHint(ph){
+  const pb=byId("promptbar"); if(!pb) return;
+  const old=pb.querySelector(".hint1"); if(old) old.remove();
+  const oldk=pb.querySelector(".keyhelp"); if(oldk) oldk.remove();
+  if(Shell.demo || Shell.measuring) return;
+  /* the keys, every time the move is typed: there are no buttons to look at */
+  if(ph==="pick"){
+    const k=document.createElement("div"); k.className="keyhelp";
+    k.innerHTML='<span><kbd>A</kbd> or <kbd>+</kbd> add</span>'
+      +'<span><kbd>S</kbd> or <kbd>\u2212</kbd> subtract</span>'
+      +'<span><kbd>M</kbd> or <kbd>x</kbd> multiply</span>'
+      +'<span><kbd>D</kbd> or <kbd>/</kbd> divide</span>';
+    pb.insertBefore(k, pb.firstChild);
+  }
+  if(TI.served>HINT_PROBLEMS || !HINTS[ph]) return;
+  const h=document.createElement("div"); h.className="hint1"; h.textContent=HINTS[ph];
+  pb.insertBefore(h, pb.firstChild);
+}
+/* the right move goes straight on to its number, with the box ready, so "−15" can be typed in one go */
+Shell.fillBlank=function(btn,then){
+  document.querySelectorAll("#panel .op").forEach(function(o){ o.disabled=true; });
+  then();
+  const f=document.querySelector("#eq input:not([disabled]), #panel input:not([disabled])");
+  if(f) f.focus();
+};
+Shell.fit=function(){
+  const box=byId("fitbox"), work=document.querySelector(".work");
+  if(!box || !work) return;
+  if(Shell.measuring || !Shell.need){ box.style.zoom="1"; return; }
+  const cs=getComputedStyle(work);
+  const availH=work.clientHeight-(parseFloat(cs.paddingTop)||0)-(parseFloat(cs.paddingBottom)||0);
+  const availW=work.clientWidth;
+  const k=Math.max(0.3, Math.min(2.6, Math.min(availH/Shell.need.h, availW/Shell.need.w)*0.94));
+  box.style.zoom=String(Math.floor(k*1000)/1000);
+};
+
+/* the newest line on the board: its cells in left-to-right order (blank spacer cells skipped) */
+function rowCells(){
+  const eq=byId("eq"), n=eq.classList.contains("k-addsub") ? 4 : 3;
+  return Array.prototype.slice.call(eq.children, -n).filter(function(c){
+    return c.classList.contains("cell") && !c.classList.contains("hide");
+  });
+}
+function applyRow(){
+  if(Shell.rowShown===null || Shell.rowShown===undefined) return;
+  rowCells().forEach(function(c,i){ c.style.visibility = i<Shell.rowShown ? "" : "hidden"; });
+}
+/* one slash through both numbers that cancel (the 9 outside and the 9 underneath) */
+function drawSlash(){
+  const eq=byId("eq");
+  eq.querySelectorAll(".xslash").forEach(function(e){ e.remove(); });
+  if(!eq.classList.contains("k-muldiv")) return;
+  const els=eq.querySelectorAll("span.cancelling, span.struck");
+  if(els.length!==2) return;
+  const cell=els[0].closest(".cell"); if(!cell) return;
+  const cr=cell.getBoundingClientRect(); if(!cr.width) return;
+  const k=cell.offsetWidth/cr.width;                 /* undo the fit-to-screen zoom */
+  /* measure the digits only, so a minus sign in front (−8) doesn't pull the slash off the number */
+  const digits=function(el){
+    const w=document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let t;
+    while((t=w.nextNode())){
+      const m=/[0-9]/.exec(t.nodeValue);
+      if(m){ const rg=document.createRange(); rg.setStart(t,m.index); rg.setEnd(t,t.nodeValue.length);
+             const r=rg.getBoundingClientRect(); if(r.width) return r; }
+    }
+    return el.getBoundingClientRect();
+  };
+  const pt=function(el){ const r=digits(el);
+    return {x:(r.left+r.width/2-cr.left)*k, y:(r.top+r.height/2-cr.top)*k, h:r.height*k}; };
+  let a=pt(els[0]), b=pt(els[1]);
+  if(a.y>b.y){ const t=a; a=b; b=t; }                 /* a on top */
+  /* stacked one over the other (5y over 5): run it straight through the middle of both numbers,
+     tipping it just enough to read as a slash (top left, bottom right, away from the variable) */
+  const ddx=b.x-a.x, ddy=b.y-a.y, minDx=0.2*Math.abs(ddy);
+  if(Math.abs(ddx) < minDx){
+    const mx=(a.x+b.x)/2;
+    a.x = mx - minDx/2; b.x = mx + minDx/2;
+  }
+  const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy)||1, ux=dx/len, uy=dy/len;
+  const x1=a.x-ux*a.h*0.5, y1=a.y-uy*a.h*0.5, x2=b.x+ux*b.h*0.5, y2=b.y+uy*b.h*0.5;
+  const full=Math.hypot(x2-x1,y2-y1);
+  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("class","xslash "+(els[0].classList.contains("cancelling")?"draw":"done"));
+  svg.setAttribute("width",cell.offsetWidth); svg.setAttribute("height",cell.offsetHeight);
+  svg.innerHTML='<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" style="--len:'+full+';stroke-dasharray:'+full+'"/>';
+  cell.appendChild(svg);
+}
+/* After the answer: the work fades, the top line goes back to the original equation, the answer
+   flies up into the variable's place, and a green check mark shows the statement is true. */
+function runCheck(instant){
+  const c=Shell.current, p=c.p, eq=byId("eq"), V=p.V;
+  const n = eq.classList.contains("k-addsub") ? 4 : 3;
+  const isAS = c.engine==="addsub";
+  const sol = isAS ? p.sol.n/p.sol.d : p.sol;
+  let solText = String(sol).replace(/-/g,"−");
+  const mdash = function(x){ return String(x).replace(/-/g,"−"); };
+  Shell.checked = true;
+
+  /* where the answer is now: the number on the last line */
+  const last = rowCells();
+  const ansCell = last.filter(function(el){
+    const t=el.textContent.trim(); return t && t!=="=" && t!==V && t!=="−"+V;
+  }).pop();
+  const ansEl = ansCell ? (ansCell.querySelector(".green") || ansCell) : null;
+  const from = ansEl ? ansEl.getBoundingClientRect() : null;
+  if(ansEl) solText = ansEl.innerHTML;          /* exactly as it's written on the bottom line */
+
+  /* the top line goes back to the problem as it was first written */
+  const top = Array.prototype.slice.call(eq.children, 0, n);
+  if(isAS){
+    top.forEach(function(el){ el.classList.remove("struck","cancelling","blue"); });
+  } else {
+    const vCell = top[p.varLeft?0:2], nCell = top[p.varLeft?2:0];
+    vCell.innerHTML = p.needs==="divide"
+      ? '<span class="tpair">'+mdash(p.a)+'<span>'+V+'</span></span>'
+      : '<span class="dfrac"><span class="t"><span>'+V+'</span></span><span class="bar"></span><span class="b">'+p.a+'</span></span>';
+    nCell.innerHTML = mdash(p.C);
+    nCell.classList.remove("blue");
+  }
+  /* the letter in that line */
+  let letter=null;
+  top.some(function(cell){
+    const w=document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+    let t;
+    while((t=w.nextNode())){
+      const i=t.nodeValue.lastIndexOf(V);
+      if(i<0) continue;
+      /* keep "−r" in one piece: the cell spaces out its parts, so give the text its own wrapper */
+      if(t.parentNode.classList && t.parentNode.classList.contains("cell")){
+        const wrap=document.createElement("span"); t.parentNode.replaceChild(wrap,t); wrap.appendChild(t);
+      }
+      const after=t.splitText(i); after.splitText(1);
+      letter=document.createElement("span"); letter.className="vl";
+      after.parentNode.replaceChild(letter, after); letter.textContent=V;
+      return true;
+    }
+    return false;
+  });
+  /* everything under the top line steps back */
+  Array.prototype.slice.call(eq.children, n).forEach(function(el){ el.classList.add("chk-fade"); });
+  eq.querySelectorAll(".xslash").forEach(function(e){ e.remove(); });
+
+  /* written in its place: brackets when it's negative, or sits right against a number or a minus */
+  const tight = (isAS && p.negVar) || (!isAS && p.needs==="divide");
+  const shown = (tight || sol<0) ? "("+solText+")" : solText;
+  const land = function(){
+    if(!letter) return;
+    letter.innerHTML = shown;
+    letter.className = "vl green";
+    const tick=document.createElement("span");
+    tick.className = "chk-tick" + (instant ? "" : " pop");
+    tick.textContent = "✓";
+    top[n-1].appendChild(tick);
+    Shell.fit();
+  };
+  if(instant || !letter || !from){ land(); return; }
+
+  /* the flight: a copy of the answer travels from the bottom line into the variable's spot */
+  const box=byId("fitbox"), zk = box.getBoundingClientRect().width / (box.offsetWidth||1);
+  const to = letter.getBoundingClientRect();
+  const fly=document.createElement("div");
+  fly.className="chk-fly"; fly.innerHTML=solText;
+  fly.style.fontSize = (parseFloat(getComputedStyle(letter).fontSize)*zk)+"px";
+  document.body.appendChild(fly);
+  Shell.flyEl = fly;
+  const fw=fly.offsetWidth, fh=fly.offsetHeight;
+  fly.style.left=(from.left+from.width/2-fw/2)+"px";
+  fly.style.top=(from.top+from.height/2-fh/2)+"px";
+  if(ansEl) ansEl.style.visibility="hidden";
+  letter.style.transition="opacity .3s";
+  void fly.offsetWidth;
+  fly.style.transform="translate("+((to.left+to.width/2)-(from.left+from.width/2))+"px,"
+                                  +((to.top+to.height/2)-(from.top+from.height/2))+"px)";
+  Shell.later(450,function(){ if(letter) letter.style.opacity="0"; });
+  Shell.later(1000,function(){
+    fly.remove(); Shell.flyEl=null;
+    if(letter) letter.style.opacity="";
+    land();
+  });
+}
 
 /* ============================================================
    Turning it in
